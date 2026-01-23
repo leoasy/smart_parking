@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.biz.mapper.AlarmMapper">
+
+    <resultMap type="Alarm" id="AlarmResult">
+            <result property="alarmId" column="alarm_id"/>
+            <result property="eventId" column="event_id"/>
+            <result property="alarmLevel" column="alarm_level"/>
+            <result property="alarmType" column="alarm_type"/>
+            <result property="alarmStatus" column="alarm_status"/>
+            <result property="triggerTime" column="trigger_time"/>
+            <result property="delFlag" column="del_flag"/>
+            <result property="createBy" column="create_by"/>
+            <result property="createTime" column="create_time"/>
+            <result property="updateBy" column="update_by"/>
+            <result property="updateTime" column="update_time"/>
+            <result property="remark" column="remark"/>
+    </resultMap>
+
+    <resultMap id="AlarmVoResult" type="com.ruoyi.biz.vo.AlarmVo"> <!-- 确保 type 是 AlarmVo 的完整类名 -->
+        <id property="alarmId" column="alarm_id"/>
+        <result property="alarmLevel" column="alarm_level"/>
+        <result property="alarmType" column="alarm_type"/>
+        <result property="alarmStatus" column="alarm_status"/>
+        <result property="triggerTime" column="trigger_time"/>
+        <result property="cameraId" column="camera_id"/>
+        <result property="cameraName" column="camera_name"/>
+        <result property="slotId" column="slot_id"/>
+        <result property="slotCode" column="slot_code"/>
+    </resultMap>
+
+        <select id="selectAlarmList" resultType="com.ruoyi.biz.vo.AlarmVo">
+                SELECT
+                        a.alarm_id,
+                        a.alarm_level,
+                        a.alarm_type,
+                        a.alarm_status,
+                        a.trigger_time,
+
+                        c.camera_name,
+                        s.slot_code
+                FROM biz_alarm a
+                             LEFT JOIN ai_event e ON a.event_id = e.event_id
+                             LEFT JOIN dev_camera c ON e.camera_id = c.camera_id
+                             LEFT JOIN biz_parking_slot s ON e.slot_id = s.parking_slot_id
+                WHERE a.del_flag = '0'
+        </select>
+
+    <!-- 分页查询告警列表，关联事件、摄像头和车位信息 -->
+    <select id="selectPageAlarmListWithDetails" resultMap="AlarmVoResult">
+        SELECT
+        a.alarm_id,
+        a.event_id,
+        a.alarm_level,
+        a.alarm_type,
+        a.alarm_status,
+        a.trigger_time,
+        e.slot_id,
+        e.camera_id,
+        c.camera_name,
+        s.slot_code
+        FROM biz_alarm a
+        LEFT JOIN ai_event e ON a.event_id = e.event_id
+        LEFT JOIN dev_camera c ON e.camera_id = c.camera_id
+        LEFT JOIN biz_parking_slot s ON e.slot_id = s.parking_slot_id
+        WHERE a.del_flag = '0'
+        <if test="params.beginTriggerTime != null and params.beginTriggerTime != ''">
+            AND a.trigger_time >= #{params.beginTriggerTime}
+        </if>
+        <if test="params.endTriggerTime != null and params.endTriggerTime != ''">
+            AND a.trigger_time &lt;= #{params.endTriggerTime}
+        </if>
+    </select>
+
+</mapper>

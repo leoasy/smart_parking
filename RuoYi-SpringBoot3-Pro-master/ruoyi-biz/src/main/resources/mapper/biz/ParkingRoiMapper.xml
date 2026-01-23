@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.biz.mapper.ParkingRoiMapper">
+
+    <resultMap type="ParkingRoi" id="ParkingRoiResult">
+            <result property="parkingRoiId" column="parking_roi_id"/>
+            <result property="slotId" column="slot_id"/>
+            <result property="imageWidth" column="image_width"/>
+            <result property="imageHeight" column="image_height"/>
+            <result property="roiPolygon" column="roi_polygon"/>
+            <result property="delFlag" column="del_flag"/>
+            <result property="createBy" column="create_by"/>
+            <result property="createTime" column="create_time"/>
+            <result property="updateBy" column="update_by"/>
+            <result property="updateTime" column="update_time"/>
+            <result property="remark" column="remark"/>
+            <result property="slotCode" column="slot_code"/>
+            <result property="cameraId" column="camera_id"/>
+            <result property="cameraName" column="camera_name"/>
+    </resultMap>
+
+    <select id="selectParkingRoiList" resultMap="ParkingRoiResult">
+            SELECT
+                    r.parking_roi_id,
+                    r.slot_id,
+                    r.image_width,
+                    r.image_height,
+                    r.roi_polygon,
+                    r.del_flag,
+                    r.create_by,
+                    r.create_time,
+                    r.update_by,
+                    r.update_time,
+                    r.remark,
+                    s.slot_code,
+                    s.camera_id,
+                    c.camera_name
+            FROM biz_parking_roi r
+                LEFT JOIN biz_parking_slot s
+                   ON r.slot_id = s.parking_slot_id
+                LEFT JOIN dev_camera c
+                   ON s.camera_id = c.camera_id
+                WHERE r.del_flag = '0'
+        </select>
+
+</mapper>
+
