@@ -1,0 +1,17 @@
+model:
+  path: "model/parking.pt"
+detector:
+  img_size: [640, 384]
+  conf_threshold: 0.25
+  iou_threshold: 0.45
+matcher:
+  method: "center"
+  center_margin: 0.5
+  iou_threshold: 0.2
+stability:
+  win: 3
+visualize:
+  enable: true
+  save_dir: "data/outputs"
+logging:
+  level: "INFO"
