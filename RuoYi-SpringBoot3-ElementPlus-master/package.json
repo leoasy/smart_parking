@@ -1,8 +1,8 @@
 {
   "name": "undsky",
   "version": "3.9.1",
-  "description": "若依管理系统",
-  "author": "jiangyanxi <https://www.undsky.com>",
+  "description": "社区车位占用检测系统",
+  "author": "aoshiyue",
   "license": "MIT",
   "type": "module",
   "scripts": {

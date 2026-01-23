@@ -223,3 +223,8 @@ referer:
   enabled: false
   # 允许的域名列表
   allowed-domains: localhost,127.0.0.1,undsky.com,www.undsky.com
+
+#FASTAPI
+ai:
+  fastapi:
+    url: http://127.0.0.1:8000

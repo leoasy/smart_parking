@@ -1,7 +1,7 @@
 <template>
   <div class="login">
     <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-      <h3 class="title">若依管理系统</h3>
+      <h3 class="title">社区车位占用检测系统</h3>
       <el-form-item prop="username">
         <el-input
           v-model="loginForm.username"
@@ -85,7 +85,7 @@
     </el-dialog>
     <!--  底部  -->
     <div class="el-login-footer">
-      <span>Copyright © 2023-2025 <a target="_blank" href="https://www.undsky.com">undsky.com</a> All Rights Reserved.</span>
+      <span>Copyright © 2025-2026 <a target="_blank" href=""></a> All Rights Reserved.</span>
     </div>
   </div>
 </template>
@@ -103,8 +103,8 @@ const { proxy } = getCurrentInstance();
 
 const loginForm = ref({
   username: "admin",
-  password: "jyx_692483",
-  rememberMe: false,
+  password: "12345678",
+  rememberMe: true,
   code: "",
   uuid: "",
   smsCode: ""
@@ -125,7 +125,7 @@ const loading = ref(false);
 // 验证码开关
 const captchaEnabled = ref(true);
 // 注册开关
-const register = ref(false);
+const register = ref(true);
 const redirect = ref(undefined);
 const smsDialogVisible = ref(false);
 const secondaryVerificationEnabled = import.meta.env.VITE_APP_SECONDARY_VERIFICATION_ENABLED === 'true';

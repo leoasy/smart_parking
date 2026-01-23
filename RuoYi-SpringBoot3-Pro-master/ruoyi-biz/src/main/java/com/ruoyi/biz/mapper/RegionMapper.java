@@ -8,8 +8,6 @@ import com.ruoyi.biz.domain.Region;
 /**
  * 中国行政区划（省市区县乡）Mapper接口
  *
- * @author 姜彦汐
- * @site https://www.undsky.com
  * @date 2025-09-12
  */
 public interface RegionMapper extends BaseMapper<Region> {

@@ -3,7 +3,7 @@
     <div class="login-container">
       <div class="login-show"></div>
       <el-form ref="loginRef" :model="loginForm" :rules="loginRules" class="login-form">
-        <h3 class="title">若依管理系统</h3>
+        <h3 class="title">社区车位占用检测系统</h3>
         <el-form-item prop="username">
           <el-input
             v-model="loginForm.username"
