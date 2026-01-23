@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f277a162-451c-4586-a4bb-ebdaabeef622" name="更改" comment="fastapi实现">
+      <change beforePath="$PROJECT_DIR$/../RuoYi-SpringBoot3-Pro-master/ruoyi-admin/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../RuoYi-SpringBoot3-Pro-master/ruoyi-admin/pom.xml" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FastAPI main" />
+        <option value="FastAPI test_main" />
+        <option value="Python Unit Test" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="383W1pSaxyb3qkE9Zr3skEVwiNg" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "FastAPI.Parking_Ai.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python 测试.Python 测试 (test_center_match.py 内).executor": "Run",
+    "Python 测试.Python 测试 (test_geometry.py 内).executor": "Run",
+    "Python 测试.Python 测试 (test_roi_loader.py 内).executor": "Run",
+    "Python 测试.Python 测试 (test_stability.py 内).executor": "Run",
+    "Python 测试.Python 测试 (test_yolo.py 内).executor": "Run",
+    "Python 测试.tests.test_config.test_load_config_minimal 的 Python 测试.executor": "Run",
+    "Python.config.executor": "Run",
+    "Python.generate_structure.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.main_api.executor": "Run",
+    "Python.roi_to_excel.executor": "Run",
+    "Python.ros_labeler.executor": "Run",
+    "Python.slot_to_excel.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "D:/IDEA/smart-parking/Parking_Ai",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\PycharmProjects\Parking_Ai\data\images" />
+      <recent name="D:\PycharmProjects\Parking_Ai\model" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\PycharmProjects\Parking_Ai\tools" />
+    </key>
+  </component>
+  <component name="RunManager" selected="FastAPI.Parking_Ai">
+    <configuration name="Parking_Ai" type="Python.FastAPI">
+      <option name="file" value="$PROJECT_DIR$/main_api.py" />
+      <module name="Parking_Ai" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="$PROJECT_DIR$/../../anaconda3/envsz/python39/python.exe" />
+      <option name="SDK_NAME" value="python39" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tests.test_config.test_load_config_minimal 的 Python 测试" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="Parking_Ai" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;tests.test_config.test_load_config_minimal&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="FastAPI.Parking_Ai" />
+      <item itemvalue="Python 测试.tests.test_config.test_load_config_minimal 的 Python 测试" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python 测试.tests.test_config.test_load_config_minimal 的 Python 测试" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.142" />
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="默认任务">
+      <changelist id="f277a162-451c-4586-a4bb-ebdaabeef622" name="更改" comment="" />
+      <created>1768028522731</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1768028522731</updated>
+      <workItem from="1768028523731" duration="2142000" />
+      <workItem from="1768051633507" duration="2151000" />
+      <workItem from="1768106478756" duration="9000" />
+      <workItem from="1768195451933" duration="4113000" />
+      <workItem from="1768201990147" duration="2470000" />
+      <workItem from="1768209014630" duration="5231000" />
+      <workItem from="1768232871950" duration="628000" />
+      <workItem from="1768282024223" duration="5848000" />
+      <workItem from="1768288610608" duration="2569000" />
+      <workItem from="1768292212753" duration="1074000" />
+      <workItem from="1768299095980" duration="889000" />
+      <workItem from="1768322382371" duration="20000" />
+      <workItem from="1768455191837" duration="1069000" />
+      <workItem from="1768456996428" duration="22000" />
+      <workItem from="1768461869927" duration="1679000" />
+      <workItem from="1768546467396" duration="6891000" />
+      <workItem from="1768634017133" duration="5832000" />
+      <workItem from="1768739550164" duration="10858000" />
+      <workItem from="1768799487557" duration="3000" />
+      <workItem from="1768817590050" duration="874000" />
+      <workItem from="1768989858202" duration="3453000" />
+      <workItem from="1769074534915" duration="3986000" />
+      <workItem from="1769153311361" duration="11000" />
+      <workItem from="1769153371505" duration="978000" />
+    </task>
+    <task id="LOCAL-00001" summary="fastapi实现">
+      <option name="closed" value="true" />
+      <created>1769153421813</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1769153421813</updated>
+    </task>
+    <task id="LOCAL-00002" summary="fastapi实现">
+      <option name="closed" value="true" />
+      <created>1769154032787</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1769154032787</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fastapi实现" />
+    <option name="LAST_COMMIT_MESSAGE" value="fastapi实现" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Parking_Ai$Parking_Ai.coverage" NAME="Parking_Ai 覆盖结果" MODIFIED="1769077045682" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$main.coverage" NAME="main 覆盖结果" MODIFIED="1768214600528" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$slot_to_excel.coverage" NAME="slot_to_excel 覆盖结果" MODIFIED="1768553270825" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$.coverage" NAME=" 覆盖结果" MODIFIED="1768213688129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$generate_structure.coverage" NAME="generate_structure 覆盖结果" MODIFIED="1768210155537" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$config.coverage" NAME="config 覆盖结果" MODIFIED="1768288192143" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$roi_to_excel.coverage" NAME="roi_to_excel 覆盖结果" MODIFIED="1768637482920" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$ros_labeler.coverage" NAME="ros_labeler 覆盖结果" MODIFIED="1768201121568" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tools" />
+    <SUITE FILE_PATH="coverage/Parking_Ai$main_api.coverage" NAME="main_api 覆盖结果" MODIFIED="1768288199073" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
