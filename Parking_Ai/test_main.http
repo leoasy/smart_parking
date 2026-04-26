@@ -1,11 +1,16 @@
-# Test your FastAPI endpoints
 
-GET http://127.0.0.1:8000/
+# FastAPI health
+GET http://127.0.0.1:8000/health
 Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+# List loaded ROIs
+GET http://127.0.0.1:8000/parking/rois
 Accept: application/json
 
 ###
+
+# Current stable status
+GET http://127.0.0.1:8000/parking/status
+Accept: application/json

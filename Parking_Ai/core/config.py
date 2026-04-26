@@ -45,6 +45,7 @@ class Config:
     visualize: VisualizeConfig = field(default_factory=VisualizeConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     raw: Dict[str, Any] = field(default_factory=dict)  # preserve raw for debug
+    roi_dir: Path = field(default_factory=lambda: Path("data/roi"))
 
 def _to_tuple_int(seq) -> Tuple[int, int]:
     if not isinstance(seq, (list, tuple)):
@@ -52,7 +53,7 @@ def _to_tuple_int(seq) -> Tuple[int, int]:
     try:
         a = int(seq[0]); b = int(seq[1])
         return (a, b)
-    except Exception:
+    except (ValueError, TypeError, IndexError):
         return (640, 384)
 
 def load_config(path: Path = None) -> Config:
@@ -139,5 +140,3 @@ CAMERA_NAME_MAP = {
         1: "停车场C-广角"
     }
 }
-
-

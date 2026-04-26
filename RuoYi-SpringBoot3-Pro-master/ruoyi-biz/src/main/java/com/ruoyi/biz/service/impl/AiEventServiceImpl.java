@@ -3,6 +3,7 @@ package com.ruoyi.biz.service.impl;
 import com.ruoyi.biz.domain.Alarm;
 import com.ruoyi.biz.domain.DevCamera;
 import com.ruoyi.biz.domain.ParkingSlot;
+import com.ruoyi.biz.kafka.KafkaProducerService;
 import com.ruoyi.biz.mapper.AlarmMapper;
 import com.ruoyi.biz.mapper.DevCameraMapper;
 import com.ruoyi.biz.mapper.ParkingSlotMapper;
@@ -21,7 +22,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.utils.DateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.biz.mapper.AiEventMapper;
 import com.ruoyi.biz.domain.AiEvent;
@@ -39,13 +39,13 @@ import jakarta.validation.Validator;
 @Service
 @RequiredArgsConstructor
 public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> implements IAiEventService {
-    @Autowired
     private final IAlarmService alarmService;
     private final AiEventMapper aiEventMapper;
     private final ParkingSlotMapper parkingSlotMapper;
-    private final  AlarmMapper alarmMapper;
+    private final AlarmMapper alarmMapper;
     private final DevCameraMapper devCameraMapper;
     protected final Validator validator;
+    private final KafkaProducerService kafkaProducerService;
 
     @Override
     public String importAiEvent(
@@ -65,7 +65,7 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
             AiEvent aiEvent =list.get(i);
             try {
                 QueryWrapper<AiEvent> queryWrapper = new QueryWrapper<>();
-                List<AiEvent> checkList = new ArrayList<>(); //aiEventMapper.selectList(queryWrapper);
+                List<AiEvent> checkList = new ArrayList<>();
                 if (checkList.size() == 0) {
                     BeanValidators.validateWithException(validator, aiEvent);
                     insertAiEvent(aiEvent);
@@ -121,19 +121,10 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
      * @param aiEvent AI推理事件
      * @return 结果
      */
-//    @Override
-//    public int insertAiEvent(AiEvent aiEvent) {
-//        aiEvent.setUserId(SecurityUtils.getUserId());
-//        aiEvent.setDeptId(SecurityUtils.getDeptId());
-//        aiEvent.setCreateBy(SecurityUtils.getUsername());
-//        aiEvent.setCreateTime(DateUtils.getNowDate());
-//            return aiEventMapper.insert(aiEvent);
-//    }
     @Override
     public int insertAiEvent(AiEvent aiEvent) {
         aiEvent.setCreateTime(DateUtils.getNowDate());
 
-        // 获取当前用户的ID和部门ID
         Long userId;
         Long deptId;
         String username;
@@ -143,30 +134,20 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
             deptId = SecurityUtils.getDeptId();
             username = SecurityUtils.getUsername();
         } catch (Exception e) {
-            // 本地测试 / 无登录态兜底
-            userId = 1L;  // 默认的用户ID（根据实际情况）
-            deptId = 1L;  // 默认的部门ID（根据实际情况）
-            username = "system";  // 默认为系统用户
+            userId = 1L;
+            deptId = 1L;
+            username = "system";
         }
 
         aiEvent.setUserId(userId);
         aiEvent.setDeptId(deptId);
         aiEvent.setCreateBy(username);
 
-        // 1️⃣ 插入事件
         int rows = aiEventMapper.insert(aiEvent);
-
-
-
-        // 2️⃣ 首次事件：FREE → OCCUPIED 才可能告警
-        handleAlarm(aiEvent);
+        kafkaProducerService.sendAiEvent(aiEvent);
 
         return rows;
-
-        // 插入AI推理事件
-//        return aiEventMapper.insert(aiEvent);
     }
-
 
     /**
      * 修改AI推理事件
@@ -176,19 +157,11 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
      */
     @Override
     public int updateAiEvent(AiEvent aiEvent) {
-        // 1️⃣ 查旧事件
         AiEvent oldEvent = aiEventMapper.selectById(aiEvent.getEventId());
 
-        // 2️⃣ 更新
         aiEvent.setUpdateTime(DateUtils.getNowDate());
         aiEvent.setUpdateBy(SecurityUtils.getUsername());
-        int rows = aiEventMapper.updateById(aiEvent);
-
-        // 3️⃣ 状态变化 → 告警
-        handleAlarm(aiEvent);
-
-        return rows;
-//        return aiEventMapper.updateById(aiEvent);
+        return aiEventMapper.updateById(aiEvent);
     }
 
     /**
@@ -211,52 +184,6 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
     @Override
     public int deleteAiEventByEventId(Long eventId) {
         return aiEventMapper.deleteById(eventId);
-    }
-
-    /**
-     * 根据 AI 事件状态变化处理告警
-     */
-    private void handleAlarm(AiEvent event) {
-
-        String oldStatus = event.getOldStatus();
-        String newStatus = event.getNewStatus();
-        Long eventId = event.getEventId();
-
-        // FREE → OCCUPIED：生成告警
-        if ("FREE".equals(oldStatus) && "OCCUPIED".equals(newStatus)) {
-
-            QueryWrapper<Alarm> qw = new QueryWrapper<>();
-            qw.eq("event_id", eventId)
-                    .eq("alarm_status", AlarmConstants.Status.UNHANDLED)
-                    .last("limit 1");
-
-            Alarm exist = alarmService.getOne(qw);
-            if (exist == null) {
-                Alarm alarm = new Alarm();
-                alarm.setEventId(event.getEventId());
-                alarm.setCameraId(event.getCameraId());
-                alarm.setSlotId(event.getSlotId());
-                alarm.setAlarmType(AlarmConstants.Type.PARKING_OCCUPIED);
-                alarm.setAlarmLevel(AlarmConstants.Level.MEDIUM);
-                alarm.setAlarmStatus(AlarmConstants.Status.UNHANDLED);
-                alarm.setTriggerTime(new Date());
-                alarmService.insertAlarm(alarm);
-            }
-        }
-
-        // OCCUPIED → FREE：消警
-        if ("OCCUPIED".equals(oldStatus) && "FREE".equals(newStatus)) {
-
-            QueryWrapper<Alarm> qw = new QueryWrapper<>();
-            qw.eq("event_id", eventId)
-                    .eq("alarm_status", AlarmConstants.Status.UNHANDLED);
-
-            Alarm alarm = alarmService.getOne(qw);
-            if (alarm != null) {
-                alarm.setAlarmStatus(AlarmConstants.Status.HANDLED);
-                alarmService.updateAlarm(alarm);
-            }
-        }
     }
 
     public Map<String, Object> dashboard() {
@@ -297,6 +224,4 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
 
         return map;
     }
-
-
 }

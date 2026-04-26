@@ -14,5 +14,8 @@ public class AIMessage {
     }
 
     private AIRole role;
+
     private String message;
+
+
 }

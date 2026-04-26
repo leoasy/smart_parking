@@ -7,14 +7,17 @@ from core.engine import ParkingEngine
 
 
 def main():
-    # ---------- 1️⃣ 加载配置 ----------
-    cfg = load_config()
+    import argparse
+    parser = argparse.ArgumentParser(description="Parking AI Detection")
+    parser.add_argument("--img", type=str, required=True, help="Path to image file")
+    parser.add_argument("--parking-lot-id", type=str, required=True, help="Parking lot ID")
+    parser.add_argument("--camera-id", type=int, required=True, help="Camera ID")
+    args = parser.parse_args()
 
-    # ---------- 2️⃣ 初始化引擎 ----------
+    cfg = load_config()
     engine = ParkingEngine(cfg)
 
-    # ---------- 3️⃣ 读取测试图片 ----------
-    img_path = Path("data/images/test.jpg")
+    img_path = Path(args.img)
     if not img_path.exists():
         raise FileNotFoundError(f"测试图片不存在: {img_path}")
 
@@ -22,20 +25,13 @@ def main():
     if image is None:
         raise RuntimeError("图片读取失败")
 
-    # ---------- 4️⃣ 指定测试 ROI ----------
-    # ⚠️ 这里一定要与你的 roi json 对应
-    parking_lot_id = "roi_1"
-    camera_id = 1
-
-    # ---------- 5️⃣ 执行检测 ----------
     result = engine.process_image(
         image=image,
-        parking_lot_id=parking_lot_id,
-        camera_id=camera_id,
+        parking_lot_id=args.parking_lot_id,
+        camera_id=args.camera_id,
         visualize=True
     )
 
-    # ---------- 6️⃣ 打印结果 ----------
     print("=== 检测结果 ===")
     print(f"停车场: {result['parking_lot_id']}")
     print(f"摄像头: {result['camera_id']}")

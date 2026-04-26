@@ -68,8 +68,6 @@ private static final long serialVersionUID = 1L;
         @TableLogic
         private String delFlag;
         public static final String DELFLAG = "del_flag";
-
-            @TableField("create_time")
         public static final String CREATETIME = "create_time";
 
         /** 用户ID */

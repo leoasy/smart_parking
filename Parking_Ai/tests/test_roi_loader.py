@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 
-from core.roi_loader import load_roi, load_roi_dir
+from core.roi_loader import load_roi, load_roi_dir_grouped
 
 
 def test_load_single_roi(tmp_path):
@@ -48,7 +48,7 @@ def test_load_single_roi(tmp_path):
     assert len(roi.slots[0].polygon) == 3
 
 
-def test_load_roi_directory(tmp_path):
+def test_load_roi_directory_grouped(tmp_path):
     """
     测试：加载 ROI 目录（多摄像头）
     """
@@ -83,10 +83,12 @@ def test_load_roi_directory(tmp_path):
         json.dumps(roi2), encoding="utf-8"
     )
 
-    roi_map = load_roi_dir(tmp_path)
+    roi_map = load_roi_dir_grouped(tmp_path)
 
     assert len(roi_map) == 2
-    assert 1 in roi_map
-    assert 2 in roi_map
-    assert roi_map[2].image_size == (1920, 1080)
+    assert "roi_1" in roi_map
+    assert "roi_2" in roi_map
+    assert 1 in roi_map["roi_1"]
+    assert 2 in roi_map["roi_2"]
+    assert roi_map["roi_2"][2].image_size == (1920, 1080)
 

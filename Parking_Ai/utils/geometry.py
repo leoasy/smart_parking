@@ -6,10 +6,10 @@ Point = Tuple[float, float]
 PolyIn = Union[List[Point], List[dict], List[List[float]]]
 
 
-def _to_float(v) -> float:
+def _to_float(v: Union[int, float, str, None]) -> float:
     try:
         return float(v)
-    except Exception:
+    except (ValueError, TypeError):
         return 0.0
 
 
@@ -41,7 +41,7 @@ def normalize_polygon(polygon: PolyIn) -> List[Point]:
                 s = str(p)
                 a, b = s.split(",")
                 out.append((_to_float(a), _to_float(b)))
-            except Exception:
+            except ValueError:
                 continue
     return out
 

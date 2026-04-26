@@ -7,6 +7,8 @@
     <resultMap type="Alarm" id="AlarmResult">
             <result property="alarmId" column="alarm_id"/>
             <result property="eventId" column="event_id"/>
+            <result property="cameraId" column="camera_id"/>
+            <result property="slotId" column="slot_id"/>
             <result property="alarmLevel" column="alarm_level"/>
             <result property="alarmType" column="alarm_type"/>
             <result property="alarmStatus" column="alarm_status"/>
@@ -17,6 +19,7 @@
             <result property="updateBy" column="update_by"/>
             <result property="updateTime" column="update_time"/>
             <result property="remark" column="remark"/>
+            <result property="imageUrl" column="image_url"/>
     </resultMap>
 
     <resultMap id="AlarmVoResult" type="com.ruoyi.biz.vo.AlarmVo"> <!-- 确保 type 是 AlarmVo 的完整类名 -->
@@ -34,11 +37,13 @@
         <select id="selectAlarmList" resultType="com.ruoyi.biz.vo.AlarmVo">
                 SELECT
                         a.alarm_id,
+                        a.event_id,
                         a.alarm_level,
                         a.alarm_type,
                         a.alarm_status,
                         a.trigger_time,
-
+                        e.camera_id,
+                        e.slot_id,
                         c.camera_name,
                         s.slot_code
                 FROM biz_alarm a

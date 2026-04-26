@@ -1,5 +1,5 @@
 # inference/detector.py
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import torch
 import numpy as np
 
@@ -19,7 +19,7 @@ class YOLODetector:
         img_size: Tuple[int, int] = (640, 384),
         conf_thres: float = 0.25,
         iou_thres: float = 0.45,
-        device: str = None,
+        device: Optional[str] = None,
     ):
         """
         :param model_path: YOLO 权重路径
@@ -46,14 +46,10 @@ class YOLODetector:
     def detect(self, image: np.ndarray) -> List[Detection]:
         """
         对单帧图像进行检测
-
-        :param image: np.ndarray (BGR)
-        :return: List[Detection]
         """
         if image is None:
             return []
 
-        # Ultralytics 支持直接传 BGR numpy
         results = self.model.predict(
             source=image,
             imgsz=self.img_size,
@@ -75,7 +71,6 @@ class YOLODetector:
         boxes = result.boxes
 
         for box in boxes:
-            # xyxy: (x1, y1, x2, y2)
             x1, y1, x2, y2 = box.xyxy[0].tolist()
             score = float(box.conf[0])
             cls_id = int(box.cls[0])

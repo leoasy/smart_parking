@@ -93,6 +93,10 @@ private static final long serialVersionUID = 1L;
         private String delFlag;
         public static final String DELFLAG = "del_flag";
 
+        @TableField("image_url" )
+        private String imageUrl;
+        public static final String IMAGEURL = "image_url";
+
         /** 用户ID */
         @TableField(exist = false)
         private Long userId;

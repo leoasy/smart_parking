@@ -26,7 +26,6 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.biz.domain.AiEvent;
 import com.ruoyi.biz.service.IAiEventService;
-import com.ruoyi.biz.mapper.AiEventMapper;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
@@ -41,7 +40,6 @@ import com.ruoyi.common.core.page.TableDataInfo;
 @RequiredArgsConstructor
 public class AiEventController extends BaseController {
     private final IAiEventService aiEventService;
-    private AiEventMapper aiEventMapper;
 
 /**
  * 查询AI推理事件列表

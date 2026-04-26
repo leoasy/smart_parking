@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 
 from core.roi_loader import CameraROI, SlotROI
-from utils.geometry import point_in_polygon
+from utils.geometry import point_in_polygon, polygon_bbox, bbox_iou
 
 
 @dataclass
@@ -86,8 +86,18 @@ class ROIMatcher:
         camera_roi: CameraROI,
     ) -> Optional[int]:
         """
-        IoU 匹配（占位实现，工程中可扩展）
+        IoU 匹配：与 ROI 外接框 IoU 最高且超过阈值的 slot
         """
-        # 🚧 先留接口，避免你现在被 geometry 拖慢整体节奏
-        # 后期如果你需要，我可以直接给你 shapely / cv2 的实现
+        best_slot_id: Optional[int] = None
+        best_iou = 0.0
+
+        for slot in camera_roi.slots:
+            slot_bbox = polygon_bbox(slot.polygon)
+            iou = bbox_iou(det.bbox, slot_bbox)
+            if iou > best_iou:
+                best_iou = iou
+                best_slot_id = slot.slot_id
+
+        if best_slot_id is not None and best_iou >= self.iou_threshold:
+            return best_slot_id
         return None

@@ -91,7 +91,8 @@ CREATE TABLE `ai_event` (
                             PRIMARY KEY (`event_id`) USING BTREE,
                             INDEX `idx_ai_event_slot_id`(`slot_id` ASC) USING BTREE,
                             INDEX `idx_ai_event_camera_id`(`camera_id` ASC) USING BTREE,
-                            INDEX `idx_ai_event_time`(`event_time` ASC) USING BTREE
+                            INDEX `idx_ai_event_time`(`event_time` ASC) USING BTREE,
+                            INDEX `idx_ai_event_camera_time`(`camera_id` ASC, `event_time` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'AI推理事件表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -101,9 +102,12 @@ DROP TABLE IF EXISTS `biz_alarm`;
 CREATE TABLE `biz_alarm` (
                              `alarm_id` bigint NOT NULL AUTO_INCREMENT COMMENT '告警ID',
                              `event_id` bigint NULL DEFAULT NULL COMMENT '关联事件ID',
+                             `camera_id` bigint NULL DEFAULT NULL COMMENT '摄像头ID',
+                             `slot_id` bigint NULL DEFAULT NULL COMMENT '车位ID',
                              `alarm_level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警等级',
                              `alarm_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警类型',
                              `alarm_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警状态(UNHANDLED/HANDLED)',
+                             `image_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '告警图片URL',
                              `trigger_time` datetime NULL DEFAULT NULL COMMENT '触发时间',
                              `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '0' COMMENT '删除标志(0存在 2删除)',
                              `create_by` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT '' COMMENT '创建者',
@@ -112,9 +116,17 @@ CREATE TABLE `biz_alarm` (
                              `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
                              `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '备注',
                              PRIMARY KEY (`alarm_id`) USING BTREE,
+                             -- 防止同一事件的重复告警（UNHANDLED 唯一）
+                             UNIQUE INDEX `uk_biz_alarm_event_status`(`event_id` ASC, `alarm_status` ASC) USING BTREE,
                              INDEX `idx_biz_alarm_event_id`(`event_id` ASC) USING BTREE,
-                             INDEX `idx_biz_alarm_level`(`alarm_level` ASC) USING BTREE
+                             INDEX `idx_biz_alarm_level`(`alarm_level` ASC) USING BTREE,
+                             INDEX `idx_biz_alarm_status_time`(`alarm_status` ASC, `trigger_time` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '告警记录表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- 增量脚本：为已存在的 biz_alarm 表添加唯一约束（防止重复告警）
+-- ----------------------------
+ALTER TABLE `biz_alarm` ADD UNIQUE INDEX `uk_biz_alarm_event_status`(`event_id`, `alarm_status`);
 
 -- ----------------------------
 -- 6、告警等级枚举表

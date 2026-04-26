@@ -12,7 +12,8 @@ def test_center_match():
             SlotROI(
                 slot_id=1,
                 camera_id=1,
-                polygon=[(0, 0), (100, 0), (100, 100), (0, 100)]
+                polygon=[(0, 0), (100, 0), (100, 100), (0, 100)],
+                slot_code="roi_test-1",
             )
         ]
     )
@@ -26,3 +27,23 @@ def test_center_match():
     result = matcher.match(detections, roi)
 
     assert result[1] == 0  # 第 0 个 detection 占用 slot 1
+
+
+def test_iou_match():
+    roi = CameraROI(
+        parking_lot_id="roi_test",
+        camera_id=1,
+        image_size=(640, 480),
+        slots=[
+            SlotROI(
+                slot_id=1,
+                camera_id=1,
+                polygon=[(0, 0), (100, 0), (100, 100), (0, 100)],
+                slot_code="roi_test-1",
+            )
+        ],
+    )
+    detections = [Detection(bbox=(10, 10, 90, 90), score=0.9)]
+    matcher = ROIMatcher(method="iou", iou_threshold=0.1)
+    result = matcher.match(detections, roi)
+    assert result[1] == 0

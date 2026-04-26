@@ -49,14 +49,3 @@ class SlotStability:
 
     def get_state(self) -> Dict[int, bool]:
         return dict(self._states)
-
-    def dump(self) -> Dict[int, list]:
-        return {k: list(v) for k, v in self._buffers.items()}
-
-    def load(self, data: Dict[int, list]):
-        self._buffers.clear()
-        self._states.clear()
-        for slot_id, seq in data.items():
-            dq = deque(seq, maxlen=self.win)
-            self._buffers[slot_id] = dq
-            self._states[slot_id] = sum(dq) > (len(dq) / 2)
