@@ -1,0 +1,24 @@
+# =========================================
+# Docker 环境专属配置
+# 覆盖 application-devmy.yml 中的连接地址
+# 激活方式: SPRING_PROFILES_ACTIVE=devmy,docker
+# =========================================
+
+# RuoYi 配置
+ruoyi:
+  # Linux 路径，由 docker-compose volume 挂载
+  profile: /data/upload
+
+spring:
+  datasource:
+    druid:
+      master:
+        # 通过 Docker 服务名访问 MySQL，不启用 SSL
+        url: jdbc:mysql://mysql:3306/smart_parking?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+        username: root
+        password: ${MYSQL_ROOT_PASSWORD}
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password:

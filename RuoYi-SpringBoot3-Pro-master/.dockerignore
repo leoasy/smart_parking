@@ -1,0 +1,27 @@
+# Maven 构建产物
+target/
+ruoyi-admin/target/
+ruoyi-biz/target/
+ruoyi-common/target/
+ruoyi-framework/target/
+ruoyi-generator/target/
+ruoyi-quartz/target/
+ruoyi-system/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# 日志
+logs/
+*.log
+
+# Maven wrapper（构建时不需要本地 JAR）
+.mvn/wrapper/maven-wrapper.jar

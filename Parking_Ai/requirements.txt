@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+httpx
+numpy
+opencv-python
+PyYAML
+pydantic
+ultralytics
+torch
+openpyxl
+pytest

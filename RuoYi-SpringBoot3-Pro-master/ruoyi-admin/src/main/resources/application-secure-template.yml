@@ -1,0 +1,24 @@
+# 可选覆盖配置：将敏感项通过环境变量注入
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP:parking-alarm-group}
+
+token:
+  secret: ${TOKEN_SECRET:change-me-in-env}
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+
+magic-api:
+  security:
+    username: ${MAGIC_API_USERNAME:admin}
+    password: ${MAGIC_API_PASSWORD:change-me}
+
+aliyah:
+  oss:
+    endpoint: ${ALIYUN_OSS_ENDPOINT:oss-cn-hangzhou.aliyuncs.com}
+    accessKeyId: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+    accessKeySecret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+    bucketName: ${ALIYUN_OSS_BUCKET:parking-ai-system}

@@ -1,0 +1,27 @@
+# Python 虚拟环境
+.venv-wsl
+.venv
+venv/
+env/
+
+# 缓存
+__pycache__/
+*.pyc
+.pytest_cache/
+.pytest_tmp/
+
+# 数据 & 输出（通过 volume 管理）
+data/outputs/
+data/images/
+
+# IDE
+.idea/
+.vscode/
+
+# Git
+.git/
+
+# 大模型文件（通过 volume 挂载）
+model/parking.pt
+model/*.onnx
+model/*.engine
