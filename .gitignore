@@ -1,16 +1,64 @@
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-# Docker 环境变量（含密码，不提交）
+# ===== Java =====
+RuoYi-SpringBoot3-Pro-master/target/
+RuoYi-SpringBoot3-Pro-master/pom.xml.tag
+RuoYi-SpringBoot3-Pro-master/pom.xml.releaseBackup
+RuoYi-SpringBoot3-Pro-master/pom.xml.versionsBackup
+RuoYi-SpringBoot3-Pro-master/pom.xml.next
+RuoYi-SpringBoot3-Pro-master/release.properties
+RuoYi-SpringBoot3-Pro-master/dependency-reduced-pom.xml
+RuoYi-SpringBoot3-Pro-master/buildNumber.properties
+RuoYi-SpringBoot3-Pro-master/.mvn/timing.properties
+RuoYi-SpringBoot3-Pro-master/.mvn/wrapper/maven-wrapper.jar
+
+# ===== Python =====
+Parking_Ai/__pycache__/
+Parking_Ai/.pytest_cache/
+Parking_Ai/*.pyc
+Parking_Ai/*.pyo
+Parking_Ai/.ruff_cache/
+Parking_Ai/dist/
+Parking_Ai/build/
+Parking_Ai/*.egg-info/
+
+# ===== AI Model Files (禁止提交) =====
+**/*.pt
+**/*.pth
+**/*.onnx
+**/*.engine
+Parking_Ai/model/
+
+# ===== Frontend =====
+RuoYi-SpringBoot3-ElementPlus-master/node_modules/
+RuoYi-SpringBoot3-ElementPlus-master/dist/
+RuoYi-SpringBoot3-ElementPlus-master/.DS_Store
+
+# ===== Docker & Env =====
 .env
-.mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
-.pt
-Parking_Ai/model/*.pt
-Parking_Ai/model/*.pth
+.env.local
+.env.*.local
+docker-compose.override.yml
+
+# ===== IDE =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ===== Logs =====
+*.log
+logs/
+RuoYi-SpringBoot3-Pro-master/logs/
+
+# ===== Temp =====
+*.tmp
+*.temp

@@ -42,7 +42,7 @@ curl http://localhost:8080/api/v1/health
 ## 配置文件
 - Docker 配置：`src/main/resources/application-docker.yml`
 - 参考 `application-secure-template.yml` 管理敏感字段
-- 数据库连接：`finpilot_dev` MySQL 实例
+- 数据库连接：smart_parking（见根目录 CLAUDE.md）
 
 ## document规范
 - 默认不创建新的说明文档或文档文件

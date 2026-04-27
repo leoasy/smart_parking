@@ -2,7 +2,11 @@ import { defineConfig, loadEnv } from 'vite'
 import path from 'path'
 import createVitePlugins from './vite/plugins'
 
-const baseUrl = 'http://localhost:8087' // 后端接口 https://vue.ruoyi.vip/prod-api
+// Docker 环境: 前端请求 /prod-api/ 通过 nginx 同源代理转发到后端
+// 本地开发: 通过 vite proxy 转发到 http://localhost:8087
+const BACKEND_URL = process.env.VITE_API_BASE_URL || '/prod-api'
+
+const baseUrl = BACKEND_URL
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
@@ -48,10 +52,12 @@ export default defineConfig(({ mode, command }) => {
       open: true,
       proxy: {
         // https://cn.vitejs.dev/config/#server-proxy
-        '/dev-api': {
-          target: baseUrl,
+        // 本地开发: /prod-api 前端本地 vite 代理，移除前缀后转发到后端
+        // 生产: VITE_API_BASE_URL=/prod-api，nginx 代理到 ruoyi-server
+        '/prod-api': {
+          target: 'http://localhost:8087',
           changeOrigin: true,
-          rewrite: (p) => p.replace(/^\/dev-api/, '')
+          rewrite: (p) => p.replace(/^\/prod-api/, '')
         },
          // springdoc proxy
          '^/v3/api-docs/(.*)': {

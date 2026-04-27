@@ -6,8 +6,6 @@
 #   2. docker compose up -d
 # =============================================
 
-version: "3.8"
-
 services:
   # ---------- 基础服务 ----------
   mysql:
@@ -21,7 +19,7 @@ services:
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_general_ci
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./RuoYi-SpringBoot3-Pro-master/sql/smart-parking.sql:/docker-entrypoint-initdb.d/01-smart-parking.sql
@@ -65,11 +63,24 @@ services:
       DRUID_LOGIN_PASSWORD: ${DRUID_LOGIN_PASSWORD}
     volumes:
       - upload_data:/data/upload
+      - ./RuoYi-SpringBoot3-Pro-master/logs:/data/logs
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1024m
+        reservations:
+          memory: 512m
 
   parking-ai:
     build:
@@ -84,13 +95,27 @@ services:
       RUOYI_PARKING_API: /biz/parking/detect
       RUOYI_PUSH_TIMEOUT_SECONDS: "3.0"
       SLOT_CODE_FORMAT: "{parking_lot_id}-{slot_id}"
+      PYTHONDONTWRITEBYTECODE: "1"
     volumes:
       # 模型文件（110MB，不 build 进镜像，运行时挂载）
       - ./Parking_Ai/model:/app/model
       # 输入图片 & 检测输出
       - ./Parking_Ai/data:/app/data
     depends_on:
-      - ruoyi-server
+      ruoyi-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 2048m
+        reservations:
+          memory: 1024m
     # GPU 支持（如果服务器有 NVIDIA GPU，取消注释）
     # deploy:
     #   resources:
@@ -99,6 +124,25 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
+
+  # ---------- 前端 ----------
+  ruoyi-ui:
+    build:
+      context: ./RuoYi-SpringBoot3-ElementPlus-master
+      dockerfile: Dockerfile.nginx
+    container_name: smart-parking-ui
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      ruoyi-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # ---------- AI 网关（可选）----------
   # 用于 Claude Code 接入 MiniMax 等第三方模型

@@ -1,0 +1,69 @@
+# ===== Git =====
+.git
+.gitignore
+.gitattributes
+.github/
+
+# ===== IDE =====
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+!.vscode/settings.json
+
+# ===== Python =====
+**/__pycache__/
+*.py[cod]
+*.pyc
+.Python
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# ===== Java =====
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+dependency-reduced-pom.xml
+
+# ===== Frontend =====
+**/node_modules/
+**/.env
+**/.env.*
+!**/.env.example
+*.log
+npm-debug.log*
+
+# ===== Model files =====
+**/*.pt
+**/*.pth
+**/*.onnx
+
+# ===== Docs & misc =====
+docs/
+*.md
+!.README.md
+*.txt
+!.bin/**
+ftp/
+
+# ===== Docker =====
+docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# ===== Temp =====
+*.tmp
+*.swp
+*.swo
+*~
+
+# ===== Local configs =====
+.env
+.env.local
+.env.*.local

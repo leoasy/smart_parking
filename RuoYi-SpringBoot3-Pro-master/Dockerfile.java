@@ -33,6 +33,9 @@ WORKDIR /app
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# 安装 curl（用于健康检查）
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /build/ruoyi-admin/target/*.jar app.jar
 
 # 上传文件挂载点（由 docker-compose 注入）
@@ -44,4 +47,6 @@ ENTRYPOINT ["java", \
     "-Dfile.encoding=UTF-8", \
     "-XX:+UseG1GC", \
     "-XX:+HeapDumpOnOutOfMemoryError", \
+    "-XX:HeapDumpPath=/data/logs", \
+    "-Xlog:gc*:file=/data/logs/gc.log:time,uptime:filecount=5,filesize=10M", \
     "-jar", "app.jar"]
