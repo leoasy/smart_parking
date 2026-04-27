@@ -1,5 +1,5 @@
 # app/schemas.py
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -12,9 +12,9 @@ class SlotResult(BaseModel):
 class DetectResponse(BaseModel):
     parking_lot_id: str
     camera_id: int
-    camera_name:str
+    camera_name: str
     slots: List[SlotResult]
-    events:List[dict] = []
+    events: Optional[List[dict]] = None
 
 
 class DetectImageRequest(BaseModel):

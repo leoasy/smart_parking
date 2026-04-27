@@ -5,7 +5,7 @@ from core.config import load_config
 from core.engine import ParkingEngine
 
 
-@lru_cache()
+@lru_cache(maxsize=1)
 def get_engine() -> ParkingEngine:
     """
     全局单例 ParkingEngine

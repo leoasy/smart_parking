@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+     xmlns="https://github.com/spotbugs/filter/1.0"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="https://github.com/spotbugs/filter/1.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugs-filter.xsd">
+
+    <!-- 排除测试代码中的问题 -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+    </Match>
+    <Match>
+        <Source name="~.*Tests\.java"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.test"/>
+    </Match>
+    <Match>
+        <Package name="~.*\.tests"/>
+    </Match>
+
+    <!-- 排除生成的代码 -->
+    <Match>
+        <Package name="~.*\.generated"/>
+    </Match>
+    <Match>
+        <Source name="~.*_.*"/>
+    </Match>
+
+    <!-- 排除特定类别的Bug -->
+    <!-- 排除 Serializable 类缺少 serialVersionUID 的警告（如果需要自定义） -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- 排除死代码相关的警告 -->
+    <Match>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+    <Match>
+        <Bug pattern="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+
+    <!-- 排除特定包下的代码 -->
+    <Match>
+        <Package name="~com\.ruoyi\.ruoyi-biz\.controller\.web.*"/>
+    </Match>
+
+</FindBugsFilter>

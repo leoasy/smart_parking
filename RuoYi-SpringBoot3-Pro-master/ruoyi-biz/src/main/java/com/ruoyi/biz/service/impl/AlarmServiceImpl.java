@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
@@ -51,12 +53,24 @@ public class AlarmServiceImpl extends ServiceImpl<AlarmMapper,Alarm> implements 
         int failureNum = 0;
         StringBuilder successMsg = new StringBuilder();
         StringBuilder failureMsg = new StringBuilder();
+        // 批量查询所有 event_id，一次DB查询替代 N 次
+        List<String> eventIds = list.stream()
+                .map(Alarm::getEventId)
+                .filter(StringUtils::isNotBlank)
+                .distinct()
+                .toList();
+        Set<String> existingEventIds = eventIds.isEmpty() ? Set.of() :
+                alarmMapper.selectList(new QueryWrapper<Alarm>()
+                        .in("event_id", eventIds)
+                        .eq("del_flag", "0"))
+                        .stream()
+                        .map(Alarm::getEventId)
+                        .collect(Collectors.toSet());
         for (int i = 0; i < list.size(); i++) {
-            Alarm alarm =list.get(i);
+            Alarm alarm = list.get(i);
             try {
-                QueryWrapper<Alarm> queryWrapper = new QueryWrapper<>();
-                List<Alarm> checkList = new ArrayList<>(); //alarmMapper.selectList(queryWrapper);
-                if (checkList.size() == 0) {
+                // 检查是否已存在相同 event_id 的记录（内存查找，零DB查询）
+                if (!existingEventIds.contains(alarm.getEventId())) {
                     BeanValidators.validateWithException(validator, alarm);
                     insertAlarm(alarm);
                     successNum++;
@@ -64,7 +78,6 @@ public class AlarmServiceImpl extends ServiceImpl<AlarmMapper,Alarm> implements 
                     ;
                 } else if (isUpdateSupport) {
                     BeanValidators.validateWithException(validator, alarm);
-                    alarm.setEventId(checkList.get(0).getEventId());
                     updateAlarm(alarm);
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、记录" + (i + titleNum + 2) + " 更新成功")

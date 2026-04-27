@@ -11,6 +11,7 @@ import com.ruoyi.biz.service.IAlarmService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import com.ruoyi.common.utils.SecurityUtils;
@@ -61,12 +62,19 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
         int failureNum = 0;
         StringBuilder successMsg = new StringBuilder();
         StringBuilder failureMsg = new StringBuilder();
+        // 批量查询所有 event_id，一次查询避免 N+1
+        List<Long> eventIds = list.stream().map(AiEvent::getEventId).collect(Collectors.toList());
+        QueryWrapper<AiEvent> batchWrapper = new QueryWrapper<>();
+        batchWrapper.in("event_id", eventIds).eq("del_flag", "0");
+        List<AiEvent> existingList = aiEventMapper.selectList(batchWrapper);
+        Set<Long> existingEventIds = existingList.stream().map(AiEvent::getEventId).collect(Collectors.toSet());
+        Map<Long, AiEvent> existingEventMap = existingList.stream().collect(Collectors.toMap(AiEvent::getEventId, e -> e));
+
         for (int i = 0; i < list.size(); i++) {
-            AiEvent aiEvent =list.get(i);
+            AiEvent aiEvent = list.get(i);
             try {
-                QueryWrapper<AiEvent> queryWrapper = new QueryWrapper<>();
-                List<AiEvent> checkList = new ArrayList<>();
-                if (checkList.size() == 0) {
+                // 检查是否已存在相同 event_id 的记录
+                if (!existingEventIds.contains(aiEvent.getEventId())) {
                     BeanValidators.validateWithException(validator, aiEvent);
                     insertAiEvent(aiEvent);
                     successNum++;
@@ -74,7 +82,7 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
                     ;
                 } else if (isUpdateSupport) {
                     BeanValidators.validateWithException(validator, aiEvent);
-                    aiEvent.setEventId(checkList.get(0).getEventId());
+                    aiEvent.setEventId(existingEventMap.get(aiEvent.getEventId()).getEventId());
                     updateAiEvent(aiEvent);
                     successNum++;
                     successMsg.append("<br/>" + successNum + "、记录" + (i + titleNum + 2) + " 更新成功")
@@ -157,8 +165,6 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
      */
     @Override
     public int updateAiEvent(AiEvent aiEvent) {
-        AiEvent oldEvent = aiEventMapper.selectById(aiEvent.getEventId());
-
         aiEvent.setUpdateTime(DateUtils.getNowDate());
         aiEvent.setUpdateBy(SecurityUtils.getUsername());
         return aiEventMapper.updateById(aiEvent);
@@ -217,8 +223,29 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
         map.put("cameraOnline", cameraOnline);
         map.put("cameraOffline", cameraOffline);
 
-        map.put("days", List.of("Mon","Tue","Wed","Thu","Fri","Sat","Sun"));
-        map.put("alarmCounts", List.of(2,5,3,6,4,7,1));
+        // 最近7天告警数据统计
+        List<String> days = new ArrayList<>();
+        List<Long> alarmCounts = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEE");
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            days.add(date.format(dayFormatter));
+
+            // 统计每日告警数量
+            LocalDate nextDay = date.plusDays(1);
+            Long count = aiEventMapper.selectCount(
+                    new QueryWrapper<AiEvent>()
+                            .ge("event_time", date.atStartOfDay())
+                            .lt("event_time", nextDay.atStartOfDay())
+                            .eq("del_flag", "0")
+            );
+            alarmCounts.add(count);
+        }
+
+        map.put("days", days);
+        map.put("alarmCounts", alarmCounts);
 
         map.put("events", events);
 

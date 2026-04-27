@@ -228,3 +228,25 @@ referer:
 ai:
   fastapi:
     url: http://127.0.0.1:8000
+
+# Actuator + Prometheus 监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name:ruoyi}
+  tracing:
+    sampling:
+      probability: 1.0

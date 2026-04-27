@@ -51,7 +51,7 @@ services:
   ruoyi-server:
     build:
       context: ./RuoYi-SpringBoot3-Pro-master
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.java
     container_name: smart-parking-ruoyi
     restart: unless-stopped
     ports:
@@ -74,7 +74,7 @@ services:
   parking-ai:
     build:
       context: ./Parking_Ai
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.python
     container_name: smart-parking-ai
     restart: unless-stopped
     ports:

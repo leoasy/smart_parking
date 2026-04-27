@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import com.ruoyi.common.constant.Constants;
 import com.ruoyi.common.filter.RefererFilter;
 import com.ruoyi.common.filter.RepeatableFilter;
+import com.ruoyi.common.filter.TraceFilter;
 import com.ruoyi.common.filter.XssFilter;
 import com.ruoyi.common.utils.StringUtils;
 
@@ -62,6 +63,18 @@ public class FilterConfig
         Map<String, String> initParameters = new HashMap<String, String>();
         initParameters.put("allowedDomains", allowedDomains);
         registration.setInitParameters(initParameters);
+        return registration;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Bean
+    public FilterRegistrationBean traceFilterRegistration()
+    {
+        FilterRegistrationBean registration = new FilterRegistrationBean();
+        registration.setFilter(new TraceFilter());
+        registration.addUrlPatterns("/*");
+        registration.setName("traceFilter");
+        registration.setOrder(FilterRegistrationBean.HIGHEST_PRECEDENCE + 1);
         return registration;
     }
 

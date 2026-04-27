@@ -35,6 +35,12 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <jakarta.version>6.0.0</jakarta.version>
         <springdoc.version>2.8.14</springdoc.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
+        <!-- 代码质量工具版本 -->
+        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+        <spotbugs-maven-plugin.version>4.8.6.5</spotbugs-maven-plugin.version>
+        <checkstyle-maven-plugin.version>3.5.0</checkstyle-maven-plugin.version>
+        <apache-rat-maven-plugin.version>0.16.1</apache-rat-maven-plugin.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -199,6 +205,13 @@
                 <version>${ruoyi.version}</version>
             </dependency>
 
+            <!-- Resilience4j 熔断 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -212,6 +225,89 @@
         <module>ruoyi-biz</module>
     </modules>
     <packaging>pom</packaging>
+
+    <!-- 插件管理 -->
+    <pluginManagement>
+        <plugins>
+            <!-- JaCoCo 代码覆盖率 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report-aggregate</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- SpotBugs 静态代码分析 -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs-maven-plugin.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Medium</threshold>
+                    <xmlOutput>true</xmlOutput>
+                    <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+            </plugin>
+
+            <!-- Checkstyle 代码格式检查 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle-maven-plugin.version}</version>
+                <configuration>
+                    <configLocation>checkstyle.xml</configLocation>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>false</failsOnError>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+            </plugin>
+
+            <!-- Apache Rat 许可证检查 -->
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-maven-plugin</artifactId>
+                <version>${apache-rat-maven-plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*.md</exclude>
+                        <exclude>**/*.txt</exclude>
+                        <exclude>**/*.yml</exclude>
+                        <exclude>**/*.yaml</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>**/*.xml</exclude>
+                        <exclude>**/.gitignore</exclude>
+                        <exclude>**/.gitattributes</exclude>
+                        <exclude>**/LICENSE</exclude>
+                        <exclude>**/NOTICE</exclude>
+                        <exclude>**/DEPENDENCIES</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </pluginManagement>
 
     <build>
         <plugins>

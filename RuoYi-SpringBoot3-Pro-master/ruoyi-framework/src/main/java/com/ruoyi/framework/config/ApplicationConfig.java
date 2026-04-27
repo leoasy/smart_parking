@@ -1,5 +1,5 @@
 package com.ruoyi.framework.config;
-
+import java.time.Duration;
 import java.util.TimeZone;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.mybatis.spring.annotation.MapperScan;
@@ -32,6 +32,9 @@ public class ApplicationConfig
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder.build();
+        return builder
+                .setConnectTimeout(Duration.ofSeconds(5))
+                .setReadTimeout(Duration.ofSeconds(30))
+                .build();
     }
 }

@@ -8,6 +8,8 @@ import com.ruoyi.biz.service.impl.DevCameraServiceImpl;
 import com.ruoyi.biz.util.OssService;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +83,8 @@ public class ParkingDetectService {
         return responseData;
     }
 
+    @CircuitBreaker(name = "aiService", fallbackMethod = "invokeFastApiFallback")
+    @Retry(name = "aiService", maxAttempts = 3)
     private Map<String, Object> invokeFastApi(String parkingLotId, Integer cameraId, File imageFile) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -105,6 +109,12 @@ public class ParkingDetectService {
         } catch (RestClientException ex) {
             throw new ServiceException("AI 服务调用失败: " + ex.getMessage());
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> invokeFastApiFallback(String parkingLotId, Integer cameraId, File imageFile, Exception ex) {
+        log.error("AI 服务熔断触发，降级处理: parkingLotId={}, cameraId={}, error={}", parkingLotId, cameraId, ex.getMessage());
+        throw new ServiceException("AI 服务暂时不可用，请稍后重试");
     }
 
     @SuppressWarnings("unchecked")

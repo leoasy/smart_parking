@@ -11,7 +11,17 @@
 			<pattern>${log.pattern}</pattern>
 		</encoder>
 	</appender>
-	
+
+	<!-- JSON格式控制台输出（使用 logstash-logback-encoder） -->
+	<appender name="console-json" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder class="net.logstash.logback.encoder.LogstashEncoder">
+			<includeMdcKeyName>traceId</includeMdcKeyName>
+			<includeMdcKeyName>spanId</includeMdcKeyName>
+			<customFields>{"service":"${springAppName:-ruoyi}"}</customFields>
+			<timeZone>Asia/Shanghai</timeZone>
+		</encoder>
+	</appender>
+
 	<!-- 系统日志输出 -->
 	<appender name="file_info" class="ch.qos.logback.core.rolling.RollingFileAppender">
 	    <file>${log.path}/sys-info.log</file>
@@ -34,7 +44,27 @@
             <onMismatch>DENY</onMismatch>
         </filter>
 	</appender>
-	
+
+	<!-- JSON格式系统日志输出 -->
+	<appender name="file_info_json" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	    <file>${log.path}/sys-info.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>${log.path}/sys-info.%d{yyyy-MM-dd}.json</fileNamePattern>
+			<maxHistory>60</maxHistory>
+		</rollingPolicy>
+		<encoder class="net.logstash.logback.encoder.LogstashEncoder">
+			<includeMdcKeyName>traceId</includeMdcKeyName>
+			<includeMdcKeyName>spanId</includeMdcKeyName>
+			<customFields>{"service":"${springAppName:-ruoyi}"}</customFields>
+			<timeZone>Asia/Shanghai</timeZone>
+		</encoder>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+	</appender>
+
 	<appender name="file_error" class="ch.qos.logback.core.rolling.RollingFileAppender">
 	    <file>${log.path}/sys-error.log</file>
         <!-- 循环政策：基于时间创建日志文件 -->
@@ -45,18 +75,38 @@
 			<maxHistory>60</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>${log.pattern}</pattern>
+			<pattern>${log.pattern}</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <!-- 过滤的级别 -->
             <level>ERROR</level>
 			<!-- 匹配时的操作：接收（记录） -->
-            <onMatch>ACCEPT</onMatch>
+			<onMatch>ACCEPT</onMatch>
 			<!-- 不匹配时的操作：拒绝（不记录） -->
-            <onMismatch>DENY</onMismatch>
+			<onMismatch>DENY</onMismatch>
         </filter>
     </appender>
-	
+
+	<!-- JSON格式错误日志输出 -->
+	<appender name="file_error_json" class="ch.qos.logback.core.rolling.RollingFileAppender">
+	    <file>${log.path}/sys-error.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log.path}/sys-error.%d{yyyy-MM-dd}.json</fileNamePattern>
+			<maxHistory>60</maxHistory>
+        </rollingPolicy>
+		<encoder class="net.logstash.logback.encoder.LogstashEncoder">
+			<includeMdcKeyName>traceId</includeMdcKeyName>
+			<includeMdcKeyName>spanId</includeMdcKeyName>
+			<customFields>{"service":"${springAppName:-ruoyi}"}</customFields>
+			<timeZone>Asia/Shanghai</timeZone>
+		</encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
 	<!-- 用户访问日志输出  -->
     <appender name="sys-user" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${log.path}/sys-user.log</file>
@@ -67,10 +117,10 @@
             <maxHistory>60</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>${log.pattern}</pattern>
+			<pattern>${log.pattern}</pattern>
         </encoder>
     </appender>
-	
+
 	<!-- 系统模块日志级别控制  -->
 	<logger name="com.ruoyi" level="info" />
 	<!-- Spring日志级别控制  -->
@@ -79,15 +129,15 @@
 	<root level="info">
 		<appender-ref ref="console" />
 	</root>
-	
+
 	<!--系统操作日志-->
     <root level="info">
         <appender-ref ref="file_info" />
         <appender-ref ref="file_error" />
     </root>
-	
+
 	<!--系统用户操作日志-->
     <logger name="sys-user" level="info">
         <appender-ref ref="sys-user"/>
     </logger>
-</configuration> 
+</configuration>
