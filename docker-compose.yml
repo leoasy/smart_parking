@@ -1,172 +1,277 @@
 # =============================================
-# smart-parking — 企业级开发环境（Docker Compose）
+# smart-parking — Docker Compose 开发环境
 # =============================================
-# 使用方式:
-#   1. cp .env.example .env  并修改密码
-#   2. docker compose up -d
+# 使用方式：
+#   1. cp .env.example .env（如果没有）
+#   2. 修改 .env 中的密码
+#   3. 确保根目录有 smart_parking.sql（数据库 dump）
+#   4. docker compose up -d
+#
+# 常用命令：
+#   docker compose up -d mysql redis   # 只启动基础设施
+#   docker compose up -d               # 启动全部服务
+#   docker compose --profile gateway up -d  # 包含 AI 网关
+#   docker compose down -v             # 删除全部数据卷，慎用
 # =============================================
+
+name: smart-parking
 
 services:
-  # ---------- 基础服务 ----------
+  # =========================
+  # MySQL 8.4 LTS
+  # =========================
   mysql:
-    image: mysql:8.0
+    image: ${MYSQL_IMAGE:-mysql:8.4}
     container_name: smart-parking-mysql
     restart: unless-stopped
-    env_file: .env
+
+    env_file:
+      - .env
+
     environment:
+      TZ: ${TZ:-Asia/Shanghai}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: smart_parking
-      MYSQL_CHARACTER_SET_SERVER: utf8mb4
-      MYSQL_COLLATION_SERVER: utf8mb4_general_ci
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-smart_parking}
+      MYSQL_USER: ${MYSQL_USER:-smart_parking}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
     ports:
-      - "3307:3306"
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+08:00
+      - --lower_case_table_names=1
+      - --max_connections=300
+      - --default-authentication-plugin=caching_sha2_password
+
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./RuoYi-SpringBoot3-Pro-master/sql/smart-parking.sql:/docker-entrypoint-initdb.d/01-smart-parking.sql
+      - ./smart_parking.sql:/docker-entrypoint-initdb.d/01-smart_parking.sql:ro
+
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 60s
 
+    networks:
+      - smart-parking-net
+
+  # =========================
+  # Redis
+  # =========================
   redis:
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:-redis:7.4-alpine}
     container_name: smart-parking-redis
     restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+
     ports:
-      - "6379:6379"
+      - "${REDIS_HOST_PORT:-6379}:6379"
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --requirepass
+      - ${REDIS_PASSWORD}
+
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 10s
       timeout: 3s
-      retries: 3
+      retries: 5
+      start_period: 10s
 
-  # ---------- 业务服务 ----------
+    networks:
+      - smart-parking-net
+
+  # =========================
+  # RuoYi 后端
+  # =========================
   ruoyi-server:
     build:
       context: ./RuoYi-SpringBoot3-Pro-master
       dockerfile: Dockerfile.java
+
     container_name: smart-parking-ruoyi
     restart: unless-stopped
-    ports:
-      - "8087:8080"
-    env_file: .env
+
+    env_file:
+      - .env
+
     environment:
-      # Spring 配置: devmy 为基础，docker 覆盖连接地址
-      SPRING_PROFILES_ACTIVE: devmy,docker
+      TZ: ${TZ:-Asia/Shanghai}
+
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-devmy,docker}
+
+      # 如果你的项目是普通 datasource，可以直接读取这些环境变量
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-smart_parking}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-smart_parking}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+
+      # 如果你的项目用 Spring Boot 3 推荐写法
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      SPRING_DATA_REDIS_DATABASE: ${REDIS_DATABASE:-0}
+
       # Druid 控制台
       DRUID_LOGIN_USERNAME: ${DRUID_LOGIN_USERNAME}
       DRUID_LOGIN_PASSWORD: ${DRUID_LOGIN_PASSWORD}
+
+    ports:
+      - "${RUOYI_HOST_PORT:-8087}:8080"
+
     volumes:
       - upload_data:/data/upload
-      - ./RuoYi-SpringBoot3-Pro-master/logs:/data/logs
+      - ./logs/ruoyi:/data/logs
+
     depends_on:
       mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          memory: 1024m
-        reservations:
-          memory: 512m
+      retries: 10
+      start_period: 90s
 
+    mem_limit: 1024m
+
+    networks:
+      - smart-parking-net
+
+  # =========================
+  # Parking AI 服务
+  # =========================
   parking-ai:
     build:
       context: ./Parking_Ai
       dockerfile: Dockerfile.python
+
     container_name: smart-parking-ai
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+
     environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
       RUOYI_BASE_URL: http://ruoyi-server:8080
       RUOYI_PARKING_API: /biz/parking/detect
       RUOYI_PUSH_TIMEOUT_SECONDS: "3.0"
       SLOT_CODE_FORMAT: "{parking_lot_id}-{slot_id}"
-      PYTHONDONTWRITEBYTECODE: "1"
+
+    ports:
+      - "${AI_HOST_PORT:-8000}:8000"
+
     volumes:
-      # 模型文件（110MB，不 build 进镜像，运行时挂载）
-      - ./Parking_Ai/model:/app/model
-      # 输入图片 & 检测输出
+      - ./Parking_Ai/model:/app/model:ro
       - ./Parking_Ai/data:/app/data
+
     depends_on:
       ruoyi-server:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8000/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 30s
-    deploy:
-      resources:
-        limits:
-          memory: 2048m
-        reservations:
-          memory: 1024m
-    # GPU 支持（如果服务器有 NVIDIA GPU，取消注释）
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
+      retries: 5
+      start_period: 45s
 
-  # ---------- 前端 ----------
+    mem_limit: 2048m
+
+    networks:
+      - smart-parking-net
+
+    # 如果服务器有 NVIDIA GPU，可以改成：
+    # gpus: all
+
+  # =========================
+  # 前端 Nginx
+  # =========================
   ruoyi-ui:
     build:
       context: ./RuoYi-SpringBoot3-ElementPlus-master
       dockerfile: Dockerfile.nginx
+
     container_name: smart-parking-ui
     restart: unless-stopped
+
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+
     ports:
-      - "80:80"
+      - "${UI_HOST_PORT:-80}:80"
+
     depends_on:
       ruoyi-server:
         condition: service_healthy
+
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/health"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 20s
 
-  # ---------- AI 网关（可选）----------
-  # 用于 Claude Code 接入 MiniMax 等第三方模型
-  # 启动后访问 http://localhost:3000 管理后台
-  # 默认管理员: root / 123456（首次登录请立即修改）
+    networks:
+      - smart-parking-net
+
+  # =========================
+  # AI 网关，可选启动
+  # =========================
   new-api:
     image: calciumion/new-api:latest
     container_name: smart-parking-api-gateway
     restart: unless-stopped
+
+    profiles:
+      - gateway
+
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+
     ports:
-      - "3000:3000"
+      - "${NEW_API_HOST_PORT:-3000}:3000"
+
     volumes:
       - new_api_data:/data
-    environment:
-      TZ: Asia/Shanghai
-      # 如果需要外部 MySQL 存储（默认 SQLite 已够用）
-      # SQL_DSN: "root:${MYSQL_ROOT_PASSWORD}@tcp(mysql:3306)/oneapi?charset=utf8mb4&parseTime=True&loc=Local"
+
+    networks:
+      - smart-parking-net
 
 volumes:
   mysql_data:
     name: smart-parking-mysql-data
+
   redis_data:
     name: smart-parking-redis-data
+
   upload_data:
     name: smart-parking-upload-data
+
   new_api_data:
     name: smart-parking-new-api-data
+
+networks:
+  smart-parking-net:
+    name: smart-parking-net
+    driver: bridge
