@@ -15,10 +15,10 @@
 
 所有数据库操作均通过 `mcp_mysql_smartparking_*` 调用。
 
-| 用途 | 数据库 | 端口 |
-|------|--------|------|
-| 本项目业务数据 | `smart_parking` | 3307 |
-| FinPilot（无关） | `finpilot_dev` | — |
+| 用途 | 数据库 | 端口 | 用户 | 密码 |
+|------|--------|------|------|------|
+| 本项目业务数据 | `smart_parking` | 3306 | `smart_parking` | `sp_2024` |
+| FinPilot（无关） | `finpilot_dev` | — | — | — |
 
 系统登录：admin / 12345678
 

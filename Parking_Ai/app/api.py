@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, Form, R
 from app.deps import get_engine
 from app.schemas import DetectResponse
 from core.engine import ParkingEngine
-from app.config import RUOYI_BASE_URL, RUOYI_PUSH_TIMEOUT_SECONDS
+from app.config import RUOYI_BASE_URL, RUOYI_PUSH_TIMEOUT_SECONDS, RUOYI_PUSH_MAX_RETRIES, RUOYI_PUSH_BACKOFF_BASE
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -25,8 +25,25 @@ class PushError(Exception):
 
 
 @router.get("/health")
-def health():
-    return {"status": "ok"}
+async def health(engine: ParkingEngine = Depends(get_engine)):
+    """
+    健康检查：返回服务状态和引擎已加载的车场数量
+    """
+    roi_map = engine.roi_map
+    return {
+        "status": "ok",
+        "parking_lots_loaded": len(roi_map),
+    }
+
+@router.get("/health/ready")
+async def health_ready(engine: ParkingEngine = Depends(get_engine)):
+    """
+    readinessProbe 专用：确认引擎已初始化且 ROI 已加载
+    """
+    roi_map = engine.roi_map
+    if not roi_map:
+        raise HTTPException(status_code=503, detail="Engine not initialized: no ROI loaded")
+    return {"status": "ready", "parking_lots_loaded": len(roi_map)}
 
 
 @router.get("/parking/rois")
@@ -67,19 +84,22 @@ async def _push_to_ruoyi(http_client: httpx.AsyncClient, push_url: str, payload:
     """
     使用指数退避向若依推送数据，只接受 2xx 响应，重试耗尽后抛出 PushError
     """
-    backoff = [0.5, 1.0, 2.0]  # 指数退避时间序列
+    max_retries = int(RUOYI_PUSH_MAX_RETRIES)
+    backoff_base = float(RUOYI_PUSH_BACKOFF_BASE)
 
-    for attempt, delay in enumerate(backoff):
+    for attempt in range(max_retries):
+        delay = backoff_base * (2 ** attempt)
         try:
-            response = await http_client.post(push_url, json=payload)
+            response = await http_client.post(push_url, json=payload, timeout=RUOYI_PUSH_TIMEOUT_SECONDS)
             if response.status_code >= 200 and response.status_code < 300:
                 return  # 成功
-            # 非 2xx 视为失败
             cause = f"HTTP {response.status_code}"
+        except httpx.TimeoutException:
+            cause = "timeout"
         except httpx.HTTPError as e:
             cause = str(e)
 
-        if attempt < len(backoff) - 1:
+        if attempt < max_retries - 1:
             logger.warning(
                 "推送若依失败(第%d次) parking_lot_id=%s camera_id=%s err=%s, %.1fs后重试",
                 attempt + 1, parking_lot_id, camera_id, cause, delay

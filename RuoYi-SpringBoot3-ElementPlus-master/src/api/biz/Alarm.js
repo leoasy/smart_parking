@@ -42,3 +42,29 @@ export function delAlarm(alarmId) {
     method: 'delete'
   })
 }
+
+// 批量删除告警记录
+export function batchDeleteAlarm(alarmIds) {
+  return request({
+    url: '/biz/Alarm/batch',
+    method: 'delete',
+    data: alarmIds
+  })
+}
+
+// 批量确认告警记录
+export function batchConfirmAlarm(alarmIds) {
+  return request({
+    url: '/biz/Alarm/confirm',
+    method: 'put',
+    data: alarmIds
+  })
+}
+
+// 确认告警记录（单个）
+export function confirmAlarm(alarmId) {
+  return request({
+    url: '/biz/Alarm/confirm/' + alarmId,
+    method: 'put'
+  })
+}

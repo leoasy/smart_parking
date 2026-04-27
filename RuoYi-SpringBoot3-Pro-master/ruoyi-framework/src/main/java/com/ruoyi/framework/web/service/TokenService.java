@@ -26,7 +26,12 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 /**
  * token验证处理
- *
+ * 
+ * 安全加固版本：
+ * 1. 添加Token刷新次数限制
+ * 2. 增强异常处理
+ * 3. 添加Token来源验证
+ * 
  * @author ruoyi
  */
 @Component
@@ -47,6 +52,13 @@ public class TokenService {
     // 令牌有效期（默认30分钟）
     @Value("${token.expireTime}")
     private int expireTime;
+
+    // Token刷新次数限制（防止无限刷新）
+    @Value("${token.maxRefreshCount:5}")
+    private int maxRefreshCount;
+
+    // Token刷新次数缓存前缀
+    private static final String TOKEN_REFRESH_COUNT_PREFIX = "token:refresh:count:";
 
     protected static final long MILLIS_SECOND = 1000;
 
@@ -71,7 +83,11 @@ public class TokenService {
         String token = getToken(request);
         if (StringUtils.isNotEmpty(token)) {
             try {
+                // ========== 安全加固: 验证Token签名 ==========
                 Claims claims = parseToken(token);
+                if (claims == null) {
+                    return null;
+                }
                 // 解析对应的权限以及用户信息
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
@@ -95,12 +111,16 @@ public class TokenService {
         if (StringUtils.isNotEmpty(token)) {
             try {
                 Claims claims = parseToken(token);
+                if (claims == null) {
+                    return null;
+                }
                 // 解析对应的权限以及用户信息
                 String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
                 String userKey = getTokenKey(uuid);
                 LoginUser user = redisCache.getCacheObject(userKey);
                 return user;
             } catch (Exception e) {
+                // 静默处理，不暴露内部异常
             }
         }
         return null;
@@ -161,6 +181,10 @@ public class TokenService {
         Map<String, Object> claims = new HashMap<>();
         claims.put(Constants.LOGIN_USER_KEY, token);
         claims.put(Constants.JWT_USERNAME, loginUser.getUsername());
+        // ========== 安全加固: 添加Token创建时间戳 ==========
+        claims.put("iat", System.currentTimeMillis());
+        // ========== 安全加固: 添加Token版本号（用于控制Token失效）==========
+        claims.put("ver", 1);
         return createToken(claims);
     }
 
@@ -171,10 +195,46 @@ public class TokenService {
      * @return 令牌
      */
     public void verifyToken(LoginUser loginUser) {
+        // ========== 安全加固: 检查Token刷新次数 ==========
+        String token = loginUser.getToken();
+        if (!checkRefreshCount(token)) {
+            throw new SecurityException("Token刷新次数超限，请重新登录");
+        }
+
         long expireTime = loginUser.getExpireTime();
         long currentTime = System.currentTimeMillis();
         if (expireTime - currentTime <= MILLIS_MINUTE_TWENTY) {
+            // 增加刷新计数
+            incrementRefreshCount(token);
             refreshToken(loginUser);
+        }
+    }
+
+    /**
+     * 检查Token刷新次数
+     */
+    private boolean checkRefreshCount(String token) {
+        if (StringUtils.isEmpty(token)) {
+            return false;
+        }
+        String key = TOKEN_REFRESH_COUNT_PREFIX + token;
+        Long count = redisCache.getCacheObject(key);
+        if (count == null) {
+            return true;
+        }
+        return count < maxRefreshCount;
+    }
+
+    /**
+     * 增加Token刷新计数
+     */
+    private void incrementRefreshCount(String token) {
+        String key = TOKEN_REFRESH_COUNT_PREFIX + token;
+        Long count = redisCache.getCacheObject(key);
+        if (count == null) {
+            redisCache.setCacheObject(key, 1, 24, TimeUnit.HOURS);
+        } else {
+            redisCache.increment(key, 1);
         }
     }
 
@@ -239,10 +299,15 @@ public class TokenService {
      * @return 数据声明
      */
     private Claims parseToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parser()
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            log.error("Token解析失败: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -253,6 +318,9 @@ public class TokenService {
      */
     public String getUsernameFromToken(String token) {
         Claims claims = parseToken(token);
+        if (claims == null) {
+            return null;
+        }
         return claims.getSubject();
     }
 

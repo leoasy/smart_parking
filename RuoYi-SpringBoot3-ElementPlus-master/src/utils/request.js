@@ -111,6 +111,7 @@ service.interceptors.response.use(
       return res.data;
     }
     if (code === 401) {
+      // 401 未授权，跳转登录
       if (!isRelogin.show) {
         isRelogin.show = true;
         ElMessageBox.confirm(
@@ -120,6 +121,7 @@ service.interceptors.response.use(
             confirmButtonText: "重新登录",
             cancelButtonText: "取消",
             type: "warning",
+            closeOnClickModal: false, // 禁止点击遮罩关闭
           }
         )
           .then(() => {
@@ -127,38 +129,170 @@ service.interceptors.response.use(
             useUserStore()
               .logOut()
               .then(() => {
-                location.href = "/admin/index";
+                // 使用 window.location 确保完整页面刷新，清除所有状态
+                window.location.href = "/admin/index";
+                window.location.reload();
+              })
+              .catch(() => {
+                window.location.href = "/admin/index";
+                window.location.reload();
               });
           })
           .catch(() => {
             isRelogin.show = false;
           });
       }
-      return Promise.reject("无效的会话，或者会话已过期，请重新登录。");
+      return Promise.reject(new Error("登录已过期，请重新登录"));
     } else if (code === 500) {
-      ElMessage({ message: msg, type: "error" });
+      // 500 服务器错误
+      ElNotification.error({
+        title: "服务器错误",
+        message: msg,
+        duration: 5000,
+      });
       return Promise.reject(new Error(msg));
+    } else if (code === 403) {
+      // 403 无权限访问
+      ElNotification.warning({
+        title: "权限不足",
+        message: "您没有权限访问该资源，请联系管理员",
+        duration: 5000,
+      });
+      return Promise.reject(new Error("无权限访问"));
+    } else if (code === 404) {
+      // 404 资源不存在
+      ElNotification.warning({
+        title: "资源不存在",
+        message: msg || "请求的资源未找到",
+        duration: 5000,
+      });
+      return Promise.reject(new Error("资源不存在"));
+    } else if (code === 502 || code === 503 || code === 504) {
+      // 502 503 504 网关错误
+      ElNotification.error({
+        title: "服务暂时不可用",
+        message: "服务器正在维护，请稍后再试",
+        duration: 5000,
+      });
+      return Promise.reject(new Error("服务暂时不可用"));
     } else if (code === 601) {
+      // 601 业务警告（如重复提交、业务校验失败等）
       ElMessage({ message: msg, type: "warning" });
       return Promise.reject(new Error(msg));
     } else if (code !== 200) {
       ElNotification.error({ title: msg });
-      return Promise.reject("error");
+      return Promise.reject(new Error(msg));
     } else {
       return Promise.resolve(res.data);
     }
   },
   (error) => {
-    console.log("err" + error);
+    // 详细记录错误信息，便于调试
+    console.error("请求错误:", error);
+
     let { message } = error;
-    if (message == "Network Error") {
-      message = "后端接口连接异常";
-    } else if (message.includes("timeout")) {
-      message = "系统接口请求超时";
-    } else if (message.includes("Request failed with status code")) {
-      message = "系统接口" + message.substr(message.length - 3) + "异常";
+    let errorType = "error";
+    let errorTitle = "请求失败";
+
+    // 网络错误处理
+    if (!error.response) {
+      // 无响应，表示网络连接问题
+      if (error.code === "ECONNREFUSED") {
+        message = "服务器拒绝连接，请检查服务器是否运行";
+      } else if (error.code === "ERR_NETWORK") {
+        message = "网络连接异常，请检查您的网络设置";
+      } else if (message === "Network Error") {
+        message = "后端接口连接异常，请检查服务器是否启动";
+      } else if (error.code === "ETIMEDOUT" || message.includes("timeout")) {
+        message = "系统接口请求超时，请稍后重试";
+        errorType = "warning";
+        errorTitle = "请求超时";
+      } else {
+        message = "网络连接失败，请检查网络状态";
+      }
+      ElNotification[errorType]({
+        title: errorTitle,
+        message: message,
+        duration: 5000,
+      });
+      return Promise.reject(error);
     }
-    ElMessage({ message: message, type: "error", duration: 5 * 1000 });
+
+    // HTTP 状态码错误处理
+    const status = error.response?.status;
+    switch (status) {
+      case 400:
+        message = "请求参数错误，请检查输入内容";
+        errorTitle = "请求错误";
+        break;
+      case 401:
+        // 401 在响应拦截器前端已处理，这里仅作兜底
+        message = "登录已过期，请重新登录";
+        if (!isRelogin.show) {
+          isRelogin.show = true;
+          ElMessageBox.confirm(message, "会话超时", {
+            confirmButtonText: "重新登录",
+            cancelButtonText: "取消",
+            type: "warning",
+          })
+            .then(() => {
+              isRelogin.show = false;
+              window.location.href = "/admin/index";
+              window.location.reload();
+            })
+            .catch(() => {
+              isRelogin.show = false;
+            });
+        }
+        break;
+      case 403:
+        message = "无权限访问该资源";
+        errorTitle = "权限不足";
+        break;
+      case 404:
+        message = "请求的资源不存在";
+        errorTitle = "未找到";
+        break;
+      case 405:
+        message = "请求方法不被允许";
+        errorTitle = "方法不支持";
+        break;
+      case 408:
+        message = "请求超时，请稍后重试";
+        errorTitle = "请求超时";
+        errorType = "warning";
+        break;
+      case 500:
+        message = "服务器内部错误，请联系管理员";
+        errorTitle = "服务器错误";
+        break;
+      case 501:
+        message = "功能未实现";
+        errorTitle = "未实现";
+        break;
+      case 502:
+        message = "网关错误，服务暂时不可用";
+        errorTitle = "网关错误";
+        break;
+      case 503:
+        message = "服务暂时不可用，请稍后重试";
+        errorTitle = "服务不可用";
+        break;
+      case 504:
+        message = "网关超时，请稍后重试";
+        errorTitle = "网关超时";
+        break;
+      default:
+        if (message.includes("timeout")) {
+          message = "系统接口请求超时";
+          errorTitle = "请求超时";
+          errorType = "warning";
+        } else if (message.includes("Request failed with status code")) {
+          message = `系统接口${status}异常`;
+        }
+    }
+
+    ElMessage({ message: message, type: errorType, duration: 5000 });
     return Promise.reject(error);
   }
 );

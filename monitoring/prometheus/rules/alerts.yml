@@ -1,0 +1,156 @@
+groups:
+  # ===========================
+  # 服务宕机告警
+  # ===========================
+  - name: service_down
+    interval: 30s
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务 {{ $labels.job }} 宕机"
+          description: "{{ $labels.job }} ({{ $labels.instance }}) 已离线超过 1 分钟"
+
+  # ===========================
+  # CPU 告警
+  # ===========================
+  - name: cpu_alerts
+    interval: 1m
+    rules:
+      - alert: HighCpuUsage
+        expr: |
+          (
+            sum by (job) (rate(process_cpu_seconds_total[5m])) /
+            sum by (job) (container_spec_cpu_quota{container_label_com_docker_compose_service!=""}[5m]) * 100
+          ) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "服务 {{ $labels.job }} CPU 使用率过高"
+          description: "{{ $labels.job }} CPU 使用率超过 80%，当前: {{ $value | printf \"%.1f\" }}%"
+
+  # ===========================
+  # 内存告警
+  # ===========================
+  - name: memory_alerts
+    interval: 1m
+    rules:
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_working_set_bytes{container_label_com_docker_compose_service!=""} /
+            container_spec_memory_limit_bytes{container_label_com_docker_compose_service!=""}
+          ) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "服务 {{ $labels.container_label_com_docker_compose_service }} 内存使用率过高"
+          description: "内存使用率超过 85%，当前: {{ $value | printf \"%.1f\" }}%"
+
+      - alert: OOMKilled
+        expr: |
+          increase(container_exit_code{container_label_com_docker_compose_service!="", exit_code="137"}[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "容器 {{ $labels.container_label_com_docker_compose_service }} 被 OOM 杀死"
+          description: "容器因内存不足被系统强制终止"
+
+  # ===========================
+  # JVM 告警（RuoYi 后端）
+  # ===========================
+  - name: jvm_alerts
+    interval: 1m
+    rules:
+      - alert: JVMPausedGcTimeTooHigh
+        expr: |
+          sum by (job) (rate(jvm_gc_pause_seconds_sum{job="ruoyi-server"}[5m])) * 100 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RuoYi 后端 GC 时间过长"
+          description: "GC 暂停时间超过 10%%，可能存在内存压力或 GC 参数不合理"
+
+      - alert: JVMHeapUsageTooHigh
+        expr: |
+          jvm_memory_used_bytes{job="ruoyi-server", area="heap"} /
+          jvm_memory_max_bytes{job="ruoyi-server", area="heap"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM 堆内存使用率过高"
+          description: "堆内存使用率超过 90%"
+
+  # ===========================
+  # HTTP 请求错误率告警
+  # ===========================
+  - name: http_alerts
+    interval: 1m
+    rules:
+      - alert: HighHttpErrorRate
+        expr: |
+          sum by (job, status) (
+            rate(http_server_requests_seconds_count{job=~"ruoyi-server|parking-ai", status=~"5.."}[5m])
+          ) / scalar(
+            sum(rate(http_server_requests_seconds_count{job=~"ruoyi-server|parking-ai"}[5m]))
+          ) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "服务 {{ $labels.job }} HTTP 5xx 错误率过高"
+          description: "{{ $labels.job }} 5xx 错误率超过 5%，当前: {{ $value | printf \"%.2f\" }}%"
+
+  # ===========================
+  # API 响应时间告警
+  # ===========================
+  - name: latency_alerts
+    interval: 1m
+    rules:
+      - alert: HighApiLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (job, uri) (rate(http_server_requests_seconds_bucket{job=~"ruoyi-server"}[5m]))
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "服务 {{ $labels.job }} API 响应延迟过高"
+          description: "P95 响应时间超过 2 秒，当前: {{ $value | printf \"%.2f\" }}s"
+
+  # ===========================
+  # Parking AI 专用告警
+  # ===========================
+  - name: parking_ai_alerts
+    interval: 1m
+    rules:
+      - alert: ParkingAiModelLoadFailed
+        expr: |
+          increase(parking_ai_model_load_errors_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Parking AI 模型加载失败"
+          description: "AI 模型加载失败，请检查模型文件是否完整"
+
+      - alert: ParkingAiDetectionLatencyHigh
+        expr: |
+          histogram_quantile(0.95,
+            sum by (job) (rate(parking_ai_detection_duration_seconds_bucket[5m]))
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Parking AI 检测延迟过高"
+          description: "P95 检测延迟超过 1 秒，当前: {{ $value | printf \"%.2f\" }}s"

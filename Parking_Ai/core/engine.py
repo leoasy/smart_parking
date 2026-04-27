@@ -1,16 +1,34 @@
 # core/engine.py
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from pathlib import Path
 import cv2
 from datetime import datetime
 import hashlib
 import numpy as np
+import logging
 
 from core.config import Config, PARKING_LOT_CODE_MAP, CAMERA_NAME_MAP
 from core.roi_loader import CameraROI, load_roi_dir_grouped
 from inference.roi_matcher import ROIMatcher, Detection
 from inference.stability import SlotStability
 from utils.draw import draw_slots, draw_detections
+
+logger = logging.getLogger(__name__)
+
+
+class ParkingEngineError(Exception):
+    """引擎基础异常"""
+    pass
+
+
+class ModelLoadError(ParkingEngineError):
+    """模型加载失败"""
+    pass
+
+
+class ROIError(ParkingEngineError):
+    """ROI 相关错误"""
+    pass
 
 
 class ParkingEngine:
@@ -21,11 +39,19 @@ class ParkingEngine:
 
     def __init__(self, config: Config):
         self.cfg = config
+        self._detector_load_failed = False
 
         # ROI: parking_lot_id -> camera_id -> CameraROI
-        self.roi_map: Dict[str, Dict[int, CameraROI]] = load_roi_dir_grouped(
-            self.cfg.roi_dir
-        )
+        try:
+            self.roi_map: Dict[str, Dict[int, CameraROI]] = load_roi_dir_grouped(
+                self.cfg.roi_dir
+            )
+        except FileNotFoundError as e:
+            logger.warning("ROI directory not found: %s, using empty ROI map", self.cfg.roi_dir)
+            self.roi_map = {}
+        except Exception as e:
+            logger.error("Failed to load ROI: %s", e)
+            self.roi_map = {}
 
         self.matcher = ROIMatcher(
             method=self.cfg.matcher.method,
@@ -36,6 +62,18 @@ class ParkingEngine:
         self.stability = SlotStability(win=self.cfg.stability.win)
         self.detector = None
         self._latest_status: Dict[Tuple[str, int], Dict[int, bool]] = {}
+
+    def is_ready(self) -> bool:
+        """
+        检查引擎是否就绪（ROI 已加载且模型可用）
+        """
+        if not self.roi_map:
+            logger.warning("ROI map is empty")
+            return False
+        if self._detector_load_failed:
+            logger.warning("Detector failed to load previously")
+            return False
+        return True
 
     # ===============================
     # Public API
@@ -48,13 +86,24 @@ class ParkingEngine:
         visualize: bool = False,
     ) -> Dict[str, Any]:
 
+        # ====== ROI 存在性检查 ======
+        if not self.roi_map:
+            raise ROIError(
+                f"ROI not loaded (parking_lot_id={parking_lot_id}, camera_id={camera_id}). "
+                "Check if ROI directory exists and contains valid JSON files."
+            )
+
         if parking_lot_id not in self.roi_map:
-            raise ValueError(f"No ROI for parking_lot_id={parking_lot_id}")
+            available = list(self.roi_map.keys())
+            raise ROIError(
+                f"No ROI for parking_lot_id={parking_lot_id}. Available: {available}"
+            )
 
         if camera_id not in self.roi_map[parking_lot_id]:
-            raise ValueError(
-                f"No ROI for camera_id={camera_id} "
-                f"in parking_lot_id={parking_lot_id}"
+            available = list(self.roi_map[parking_lot_id].keys())
+            raise ROIError(
+                f"No ROI for camera_id={camera_id} in parking_lot_id={parking_lot_id}. "
+                f"Available camera_ids: {available}"
             )
 
         camera_roi = self.roi_map[parking_lot_id][camera_id]
@@ -165,13 +214,33 @@ class ParkingEngine:
     # ===============================
     def _detect(self, image: np.ndarray) -> List[Detection]:
         if self.detector is None:
-            self.detector = self._load_detector()
-        return self.detector.detect(image)
+            if self._detector_load_failed:
+                logger.warning("Skipping detection due to previous load failure")
+                return []
+            try:
+                self.detector = self._load_detector()
+            except Exception as e:
+                self._detector_load_failed = True
+                logger.error("Failed to load detector: %s", e)
+                return []
+        try:
+            return self.detector.detect(image)
+        except Exception as e:
+            logger.error("Detection failed: %s", e)
+            return []
 
     def _load_detector(self):
         from inference.detector import YOLODetector
+
+        model_path = Path(self.cfg.model.path)
+        if not model_path.exists():
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+
+        if not model_path.suffix.lower() in ['.pt', '.pth', '.onnx']:
+            logger.warning("Model file may not be a valid model: %s", model_path)
+
         return YOLODetector(
-            model_path=self.cfg.model.path,
+            model_path=str(model_path),
             img_size=self.cfg.detector.img_size,
             conf_thres=self.cfg.detector.conf_threshold,
             iou_thres=self.cfg.detector.iou_threshold,

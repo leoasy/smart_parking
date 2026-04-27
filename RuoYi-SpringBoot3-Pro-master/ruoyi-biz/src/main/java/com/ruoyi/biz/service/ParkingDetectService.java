@@ -14,18 +14,25 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Date;
 import java.util.List;
@@ -106,8 +113,18 @@ public class ParkingDetectService {
                 throw new ServiceException("FastAPI 返回空响应");
             }
             return responseData;
+        } catch (HttpClientErrorException ex) {
+            // 4xx 客户端错误 - 请求格式错误、权限问题等
+            log.error("AI 服务客户端错误: status={}, body={}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw new ServiceException("AI 服务请求失败: " + ex.getStatusCode());
+        } catch (HttpServerErrorException ex) {
+            // 5xx 服务器错误 - FastAPI 内部故障
+            log.error("AI 服务端错误: status={}, body={}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw new ServiceException("AI 服务暂时不可用: " + ex.getStatusCode());
         } catch (RestClientException ex) {
-            throw new ServiceException("AI 服务调用失败: " + ex.getMessage());
+            // 网络连接失败、超时等
+            log.error("AI 服务连接失败: {}", ex.getMessage());
+            throw new ServiceException("AI 服务连接失败: " + ex.getMessage());
         }
     }
 
@@ -135,10 +152,12 @@ public class ParkingDetectService {
     }
 
     private String uploadImage(File imageFile) {
-        try {
-            byte[] imageBytes = Files.readAllBytes(imageFile.toPath());
-            return ossService.upload(imageBytes, UUID.randomUUID() + ".jpg");
-        } catch (Exception ex) {
+        // 流式上传，避免将整个图片加载到内存
+        String objectName = "alarm/" + java.time.LocalDate.now() + "/" + UUID.randomUUID() + ".jpg";
+        try (InputStream inputStream = new FileInputStream(imageFile)) {
+            return ossService.uploadStream(inputStream, imageFile.length(), objectName);
+        } catch (IOException ex) {
+            log.error("读取图片文件失败: {}", ex.getMessage());
             throw new ServiceException("上传图片失败: " + ex.getMessage());
         }
     }
@@ -162,6 +181,7 @@ public class ParkingDetectService {
     ) {
         ParkingSlot parkingSlot = parkingSlotService.selectByCameraAndSlotCode(cameraId, slotCode);
         if (parkingSlot == null) {
+            log.debug("未找到对应车位记录, 跳过更新: cameraId={}, slotCode={}", cameraId, slotCode);
             return;
         }
 

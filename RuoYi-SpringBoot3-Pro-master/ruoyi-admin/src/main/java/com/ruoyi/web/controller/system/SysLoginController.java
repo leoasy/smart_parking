@@ -9,7 +9,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.NumberUtil;
 import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.annotation.RateLimiter;
 import com.ruoyi.common.core.text.Convert;
+import com.ruoyi.common.enums.LimitType;
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.sign.RsaUtils;
@@ -62,9 +64,9 @@ public class SysLoginController {
     /**
      * 登录方法
      *
-     * @param loginBody 登录信息
-     * @return 结果
+     * 安全加固: 60秒内最多5次登录尝试（防止暴力破解）
      */
+    @RateLimiter(key = "login", time = 60, count = 5, limitType = LimitType.IP)
     @PostMapping("/login")
     public AjaxResult login(@RequestBody LoginBody loginBody) {
         AjaxResult ajax = AjaxResult.success();

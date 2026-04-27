@@ -23,7 +23,10 @@ services:
   mysql:
     image: ${MYSQL_IMAGE:-mysql:8.4}
     container_name: smart-parking-mysql
-    restart: unless-stopped
+    restart: on-failure:3
+    cpus: 1.5
+    mem_limit: 1536m
+    shm_size: 256m
 
     env_file:
       - .env
@@ -44,21 +47,32 @@ services:
       - --default-time-zone=+08:00
       - --lower_case_table_names=1
       - --max_connections=300
-      - --default-authentication-plugin=caching_sha2_password
+      - --innodb-buffer-pool-size=512M
+      - --innodb-log-file-size=256M
+      - --innodb-flush-log-at-trx-commit=2
+      - --innodb-flush-method=O_DIRECT
 
     volumes:
       - mysql_data:/var/lib/mysql
       - ./smart_parking.sql:/docker-entrypoint-initdb.d/01-smart_parking.sql:ro
 
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -psilent"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 8
       start_period: 60s
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=mysql"
+
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.10
 
   # =========================
   # Redis
@@ -66,7 +80,9 @@ services:
   redis:
     image: ${REDIS_IMAGE:-redis:7.4-alpine}
     container_name: smart-parking-redis
-    restart: unless-stopped
+    restart: on-failure:3
+    cpus: 0.75
+    mem_limit: 512m
 
     env_file:
       - .env
@@ -83,19 +99,31 @@ services:
       - "yes"
       - --requirepass
       - ${REDIS_PASSWORD}
+      - --maxmemory=384mb
+      - --maxmemory-policy=allkeys-lru
+      - --save=""
+      - --appendfsync=everysec
 
     volumes:
       - redis_data:/data
 
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping"]
       interval: 10s
       timeout: 3s
       retries: 5
       start_period: 10s
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        labels: "service=redis"
+
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.11
 
   # =========================
   # RuoYi 后端
@@ -106,7 +134,10 @@ services:
       dockerfile: Dockerfile.java
 
     container_name: smart-parking-ruoyi
-    restart: unless-stopped
+    restart: on-failure:5
+    cpus: 2
+    mem_limit: 1536m
+    shm_size: 128m
 
     env_file:
       - .env
@@ -132,6 +163,9 @@ services:
       DRUID_LOGIN_USERNAME: ${DRUID_LOGIN_USERNAME}
       DRUID_LOGIN_PASSWORD: ${DRUID_LOGIN_PASSWORD}
 
+      # JVM 优化
+      JAVA_OPTS: "-Xms768m -Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
+
     ports:
       - "${RUOYI_HOST_PORT:-8087}:8080"
 
@@ -149,13 +183,19 @@ services:
       test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
-      retries: 10
+      retries: 8
       start_period: 90s
 
-    mem_limit: 1024m
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=ruoyi-server"
 
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.20
 
   # =========================
   # Parking AI 服务
@@ -166,7 +206,9 @@ services:
       dockerfile: Dockerfile.python
 
     container_name: smart-parking-ai
-    restart: unless-stopped
+    restart: on-failure:5
+    cpus: 2
+    mem_limit: 2048m
 
     environment:
       TZ: ${TZ:-Asia/Shanghai}
@@ -196,10 +238,16 @@ services:
       retries: 5
       start_period: 45s
 
-    mem_limit: 2048m
+    logging:
+      driver: json-file
+      options:
+        max-size: "100m"
+        max-file: "5"
+        labels: "service=parking-ai"
 
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.30
 
     # 如果服务器有 NVIDIA GPU，可以改成：
     # gpus: all
@@ -213,7 +261,9 @@ services:
       dockerfile: Dockerfile.nginx
 
     container_name: smart-parking-ui
-    restart: unless-stopped
+    restart: on-failure:3
+    cpus: 0.5
+    mem_limit: 256m
 
     environment:
       TZ: ${TZ:-Asia/Shanghai}
@@ -232,8 +282,16 @@ services:
       retries: 5
       start_period: 20s
 
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        labels: "service=ruoyi-ui"
+
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.40
 
   # =========================
   # AI 网关，可选启动
@@ -241,7 +299,9 @@ services:
   new-api:
     image: calciumion/new-api:latest
     container_name: smart-parking-api-gateway
-    restart: unless-stopped
+    restart: on-failure:3
+    cpus: 1
+    mem_limit: 512m
 
     profiles:
       - gateway
@@ -255,8 +315,23 @@ services:
     volumes:
       - new_api_data:/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+        labels: "service=new-api"
+
     networks:
-      - smart-parking-net
+      smart-parking-net:
+        ipv4_address: 172.28.0.50
 
 volumes:
   mysql_data:
@@ -275,3 +350,6 @@ networks:
   smart-parking-net:
     name: smart-parking-net
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

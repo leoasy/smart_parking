@@ -29,6 +29,7 @@ build/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
+pom.xml.merged
 dependency-reduced-pom.xml
 
 # ===== Frontend =====
@@ -43,27 +44,25 @@ npm-debug.log*
 **/*.pt
 **/*.pth
 **/*.onnx
+**/model/*.pt
+**/model/*.pth
+**/model/*.onnx
 
 # ===== Docs & misc =====
 docs/
 *.md
 !.README.md
+CLAUDE.md
 *.txt
-!.bin/**
 ftp/
-
-# ===== Docker =====
-docker-compose.yml
-Dockerfile*
-.dockerignore
 
 # ===== Temp =====
 *.tmp
 *.swp
 *.swo
 *~
+*.bak
 
 # ===== Local configs =====
-.env
 .env.local
 .env.*.local

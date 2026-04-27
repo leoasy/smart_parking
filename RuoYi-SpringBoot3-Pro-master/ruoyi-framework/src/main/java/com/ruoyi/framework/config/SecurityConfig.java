@@ -1,29 +1,42 @@
 package com.ruoyi.framework.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.filter.CorsFilter;
 import com.ruoyi.framework.config.properties.PermitAllUrlProperties;
+import com.ruoyi.framework.filter.XssFilter;
 import com.ruoyi.framework.security.filter.JwtAuthenticationTokenFilter;
 import com.ruoyi.framework.security.handle.AuthenticationEntryPointImpl;
 import com.ruoyi.framework.security.handle.LogoutSuccessHandlerImpl;
+import com.ruoyi.framework.web.service.SysPasswordService;
 
 /**
  * spring security配置
  * 
+ * 安全加固版本：
+ * 1. 启用密码重试限制
+ * 2. 添加XSS过滤器
+ * 3. 增强安全响应头
+ * 
  * @author ruoyi
  */
+@EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Configuration
 public class SecurityConfig
@@ -53,19 +66,48 @@ public class SecurityConfig
     private CorsFilter corsFilter;
 
     /**
+     * XSS过滤器
+     */
+    @Autowired
+    private XssFilter xssFilter;
+
+    /**
      * 允许匿名访问的地址
      */
     @Autowired
     private PermitAllUrlProperties permitAllUrl;
 
-	/**
-	 * 身份验证实现
-	 */
-	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception 
-	{
-		return authenticationConfiguration.getAuthenticationManager();
-	}
+    /**
+     * 密码服务
+     */
+    @Autowired
+    private SysPasswordService sysPasswordService;
+
+    /**
+     * 是否启用密码重试限制
+     */
+    @Value("${user.password.enableRetryLimit:true}")
+    private boolean enablePasswordRetryLimit;
+
+    /**
+     * 身份验证实现
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception 
+    {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    /**
+     * 认证提供者
+     */
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(sysPasswordService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
 
     /**
      * anyRequest          |   匹配所有请求路径
@@ -90,7 +132,12 @@ public class SecurityConfig
             .csrf(csrf -> csrf.disable())
             // 禁用HTTP响应标头
             .headers((headersCustomizer) -> {
-                headersCustomizer.cacheControl(cache -> cache.disable()).frameOptions(options -> options.sameOrigin());
+                headersCustomizer
+                    .cacheControl(cache -> cache.disable())
+                    .frameOptions(options -> options.sameOrigin())
+                    // ========== 安全加固: 添加安全响应头 ==========
+                    .contentTypeOptions(contentType -> {})
+                    .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000));
             })
             // 认证失败处理类
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
@@ -112,6 +159,8 @@ public class SecurityConfig
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler))
             // 添加JWT filter
             .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
+            // 添加XSS filter（在JWT之后，Controller之前）
+            .addFilterAfter(xssFilter, JwtAuthenticationTokenFilter.class)
             // 添加CORS filter
             .addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class)
             .addFilterBefore(corsFilter, LogoutFilter.class)
@@ -122,7 +171,7 @@ public class SecurityConfig
      * 强散列哈希加密实现
      */
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder()
+    public PasswordEncoder passwordEncoder()
     {
         return new BCryptPasswordEncoder();
     }

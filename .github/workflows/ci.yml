@@ -36,7 +36,7 @@ jobs:
           java-version: "17"
           cache: maven
       - name: Run Maven tests
-        run: mvn -pl ruoyi-biz -am test
+        run: mvn -pl ruoyi-biz -am test --dangerously-skip-permissions
 
   # ===== Frontend Build =====
   frontend-build:

@@ -1,0 +1,72 @@
+# Prometheus 配置 for Smart Parking
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'smart-parking'
+    environment: 'docker'
+
+alerting:
+  alertmanagers: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus 自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # RuoYi Spring Boot 后端（需要 Spring Boot Actuator + Micrometer）
+  - job_name: 'ruoyi-server'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['ruoyi-server:8080']
+        labels:
+          service: 'ruoyi-server'
+          app: 'smart-parking-backend'
+    scrape_timeout: 10s
+
+  # Parking AI Python 服务
+  - job_name: 'parking-ai'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['parking-ai:8000']
+        labels:
+          service: 'parking-ai'
+          app: 'smart-parking-ai'
+    scrape_timeout: 10s
+
+  # MySQL Exporter
+  - job_name: 'mysql'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+        labels:
+          service: 'mysql'
+    scrape_timeout: 10s
+
+  # Redis Exporter
+  - job_name: 'redis'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['redis-exporter:9121']
+        labels:
+          service: 'redis'
+    scrape_timeout: 10s
+
+  # 前端 Nginx（可选，需要 nginx_exporter）
+  - job_name: 'nginx'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['ruoyi-ui:8081']
+        labels:
+          service: 'nginx'
+    scrape_timeout: 10s

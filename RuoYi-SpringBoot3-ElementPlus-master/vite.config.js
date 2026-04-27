@@ -37,11 +37,32 @@ export default defineConfig(({ mode, command }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       chunkSizeWarningLimit: 2000,
+      // terser 压缩配置
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+          pure_funcs: ['console.log', 'console.info']
+        },
+        format: {
+          comments: false
+        }
+      },
       rollupOptions: {
         output: {
           chunkFileNames: 'static/js/[name]-[hash].js',
           entryFileNames: 'static/js/[name]-[hash].js',
-          assetFileNames: 'static/[ext]/[name]-[hash].[ext]'
+          assetFileNames: 'static/[ext]/[name]-[hash].[ext]',
+          // 手动分包配置
+          manualChunks: {
+            // Element Plus 及其依赖单独打包
+            'element-plus': ['element-plus'],
+            // 第三方库单独打包
+            'vendor': ['lodash-es', 'axios', 'vue', 'vue-router', 'pinia'],
+            // 图标库单独打包
+            'icons': ['@element-plus/icons']
+          }
         }
       }
     },

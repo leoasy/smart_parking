@@ -1,1 +1,0 @@
-../../RuoYi-SpringBoot3-Pro-master/sql/smart-parking.sql
