@@ -70,7 +70,7 @@ async def detect_image(
     if image is None:
         raise HTTPException(status_code=400, detail="非法图片")
 
-    # ---------- 2️.调用引擎 ----------
+    # ---------- 2.调用引擎 ----------
     try:
         result = engine.process_image(
             image=image,

@@ -20,10 +20,16 @@ class SlotStability:
         self._states: Dict[int, bool] = {}
 
     def update(self, current: Dict[int, bool]) -> Dict[int, bool]:
+        """
+        滑动窗口稳定性判断。多数票胜出；平票时：
+          - win <= 2：采用最新帧状态
+          - win >= 3：保持上一轮稳定状态
+        """
         for slot_id, occupied in current.items():
             if slot_id not in self._buffers:
                 self._buffers[slot_id] = deque(maxlen=self.win)
-                self._states[slot_id] = False
+                # 新 slot 立即以当前状态响应，避免首帧延迟
+                self._states[slot_id] = bool(occupied)
 
             buf = self._buffers[slot_id]
             buf.append(bool(occupied))

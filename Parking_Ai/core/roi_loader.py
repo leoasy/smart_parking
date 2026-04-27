@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Tuple, Dict, Optional
 import json
+import logging
 import os
 
 # =============================
@@ -126,9 +127,12 @@ def load_roi_dir_grouped(roi_dir: Path) -> Dict[str, Dict[int, CameraROI]]:
 
         grouped.setdefault(parking_lot_id, {})
         if camera_id in grouped[parking_lot_id]:
-            raise ValueError(
-                f"Duplicate camera_id={camera_id} in parking_lot={parking_lot_id}"
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "Duplicate camera_id=%d in parking_lot=%s (skipping second occurrence: %s)",
+                camera_id, parking_lot_id, json_path
             )
+            continue
 
         grouped[parking_lot_id][camera_id] = camera_roi
 

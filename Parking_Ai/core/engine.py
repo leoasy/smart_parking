@@ -59,6 +59,17 @@ class ParkingEngine:
 
         camera_roi = self.roi_map[parking_lot_id][camera_id]
 
+        # 校验图片尺寸是否与 ROI 预期一致（警告级别）
+        expected_h, expected_w = camera_roi.image_size[1], camera_roi.image_size[0]
+        actual_h, actual_w = image.shape[:2]
+        if (actual_h, actual_w) != (expected_h, expected_w):
+            import logging
+            logging.warning(
+                "Image size mismatch: got (%dx%d), ROI expects (%dx%d) for "
+                "parking_lot_id=%s camera_id=%s",
+                actual_w, actual_h, expected_w, expected_h, parking_lot_id, camera_id
+            )
+
         # ====== 建立索引映射 ======
         slot_map = {
             slot.slot_id: slot

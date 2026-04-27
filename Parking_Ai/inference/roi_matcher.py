@@ -86,7 +86,8 @@ class ROIMatcher:
         camera_roi: CameraROI,
     ) -> Optional[int]:
         """
-        IoU 匹配：与 ROI 外接框 IoU 最高且超过阈值的 slot
+        IoU 匹配：遍历所有 slot，找到与 ROI 外接框 IoU 最高且超过阈值的 slot。
+        注意：一个检测可能落在多个 slot 附近，此处取 IoU 最高的那个。
         """
         best_slot_id: Optional[int] = None
         best_iou = 0.0

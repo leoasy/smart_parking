@@ -75,8 +75,8 @@ def load_config(path: Path = None) -> Config:
     # detector
     det = raw.get("detector", {})
     img_size = _to_tuple_int(det.get("img_size") or det.get("image_size") or (640, 384))
-    conf_threshold = float(det.get("conf_threshold", det.get("conf_threshold", 0.25)))
-    iou_threshold = float(det.get("iou_threshold", det.get("iou_threshold", 0.45)))
+    conf_threshold = float(det.get("conf_threshold", 0.25))
+    iou_threshold = float(det.get("iou_threshold", 0.45))
     detector = DetectorConfig(img_size=img_size, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
 
     # matcher
