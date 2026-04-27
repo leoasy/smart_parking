@@ -1,6 +1,6 @@
 import os
 
-def generate_project_structure(path, indent=0):
+def generate_project_structure(path: str, indent: int = 0) -> None:
     """递归生成目录结构图"""
     if not os.path.exists(path):
         print(f"路径 '{path}' 不存在")

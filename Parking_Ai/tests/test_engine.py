@@ -11,7 +11,7 @@ from core.config import (
 
 
 class _DummyDetector:
-    def detect(self, image):
+    def detect(self, image: np.ndarray) -> list:
         return []
 
 
@@ -26,7 +26,7 @@ def _build_cfg():
     )
 
 
-def test_engine_get_current_status(monkeypatch):
+def test_engine_get_current_status(monkeypatch) -> None:
     monkeypatch.setattr(
         "core.engine.load_roi_dir_grouped",
         lambda _: {

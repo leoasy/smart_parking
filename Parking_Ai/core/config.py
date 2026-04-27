@@ -47,7 +47,7 @@ class Config:
     raw: Dict[str, Any] = field(default_factory=dict)  # preserve raw for debug
     roi_dir: Path = field(default_factory=lambda: Path("data/roi"))
 
-def _to_tuple_int(seq) -> Tuple[int, int]:
+def _to_tuple_int(seq: Any) -> Tuple[int, int]:
     if not isinstance(seq, (list, tuple)):
         return (640, 384)
     try:

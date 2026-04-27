@@ -152,7 +152,7 @@ class ParkingEngine:
     # ===============================
     # Internal
     # ===============================
-    def _detect(self, image) -> List[Detection]:
+    def _detect(self, image: np.ndarray) -> List[Detection]:
         if self.detector is None:
             self.detector = self._load_detector()
         return self.detector.detect(image)
@@ -166,7 +166,7 @@ class ParkingEngine:
             iou_thres=self.cfg.detector.iou_threshold,
         )
 
-    def _save_visualization(self, image):
+    def _save_visualization(self, image: np.ndarray) -> None:
         out_dir = Path(self.cfg.visualize.save_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")

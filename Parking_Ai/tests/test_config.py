@@ -4,7 +4,7 @@ from pathlib import Path
 import yaml
 from core.config import load_config, Config
 
-def test_load_config_minimal(tmp_path):
+def test_load_config_minimal(tmp_path: Path) -> None:
     # create a minimal config file
     cfg_dict = {
         "model": {"path": "model/parking.pt"},

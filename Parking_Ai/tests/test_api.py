@@ -16,7 +16,7 @@ class DummyEngine:
     def get_current_status(self):
         return {"snapshots": []}
 
-    def process_image(self, image, parking_lot_id, camera_id, visualize=False):
+    def process_image(self, image: np.ndarray, parking_lot_id: str, camera_id: int, visualize: bool = False) -> Dict[str, Any]:
         if parking_lot_id == "missing":
             raise ValueError("No ROI for parking_lot_id=missing")
         return {

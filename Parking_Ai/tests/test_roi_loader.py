@@ -5,7 +5,7 @@ from pathlib import Path
 from core.roi_loader import load_roi, load_roi_dir_grouped
 
 
-def test_load_single_roi(tmp_path):
+def test_load_single_roi(tmp_path: Path) -> None:
     """
     测试：加载单个 ROI JSON
     """
@@ -48,7 +48,7 @@ def test_load_single_roi(tmp_path):
     assert len(roi.slots[0].polygon) == 3
 
 
-def test_load_roi_directory_grouped(tmp_path):
+def test_load_roi_directory_grouped(tmp_path: Path) -> None:
     """
     测试：加载 ROI 目录（多摄像头）
     """

@@ -3,6 +3,7 @@ import cv2
 import json
 import numpy as np
 import os
+from typing import Any
 
 WINDOW = "ROI_LABEL"
 
@@ -16,7 +17,7 @@ CAMERA_ID = 1   #摄像头标识
 IMAGE_PATH = "../data/images/parking_3.jpg"
 
 
-def mouse_cb(event, x, y, flags, param):
+def mouse_cb(event: int, x: int, y: int, flags: int, param: Any) -> None:
     global current_polygon, rois, next_slot_id
 
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -36,7 +37,7 @@ def mouse_cb(event, x, y, flags, param):
         else:
             print("⚠ 至少需要 3 个点")
 
-def draw_frame(img):
+def draw_frame(img: np.ndarray) -> np.ndarray:
     show = img.copy()
 
     # 已保存 ROI
@@ -60,7 +61,7 @@ def draw_frame(img):
 
     return show
 
-def save_to_file(img):
+def save_to_file(img: np.ndarray) -> None:
     h, w = img.shape[:2]
     out = {
         "parking_lot_id": PARKING_LOT_ID,
