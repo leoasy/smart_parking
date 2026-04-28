@@ -36,7 +36,7 @@ mvn spring-boot:run -Dspring-boot.run.profiles=docker
 docker build -t smart-parking-backend .
 
 # 健康检查
-curl http://localhost:8080/api/v1/health
+curl http://localhost:8087/actuator/health
 ```
 
 ## 配置文件
