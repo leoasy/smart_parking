@@ -20,18 +20,12 @@ services:
     mem_limit: 2048m
     shm_size: 512m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-smart_parking}
       MYSQL_USER: ${MYSQL_USER:-smart_parking}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-
-    ports:
-      - "${MYSQL_HOST_PORT:-3306}:3306"
 
     command:
       - --character-set-server=utf8mb4
@@ -81,14 +75,9 @@ services:
     cpus: 1
     mem_limit: 1024m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
-
-    ports:
-      - "${REDIS_HOST_PORT:-6379}:6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
     command:
       - sh
@@ -120,15 +109,12 @@ services:
   # RuoYi 后端
   # =========================
   ruoyi-server:
-    image: ${DOCKER_REGISTRY:-}/smart-parking-ruoyi:latest
+    image: ${RUOYI_IMAGE:-smart-parking-ruoyi:latest}
     container_name: smart-parking-ruoyi
     restart: always
     cpus: 2
     mem_limit: 2048m
     shm_size: 256m
-
-    env_file:
-      - .env
 
     environment:
       TZ: ${TZ:-Asia/Shanghai}
@@ -158,9 +144,6 @@ services:
 
       # JVM
       JAVA_OPTS: "-Xms1024m -Xmx1536m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -Djava.security.egd=file:/dev/./urandom"
-
-    ports:
-      - "${RUOYI_HOST_PORT:-8080}:8080"
 
     volumes:
       - upload_data:/data/upload
@@ -194,7 +177,7 @@ services:
   # Parking AI 服务
   # =========================
   parking-ai:
-    image: ${DOCKER_REGISTRY:-}/smart-parking-ai:latest
+    image: ${AI_IMAGE:-smart-parking-ai:latest}
     container_name: smart-parking-ai
     restart: always
     cpus: 2
@@ -209,9 +192,6 @@ services:
       RUOYI_PARKING_API: /biz/parking/detect
       RUOYI_PUSH_TIMEOUT_SECONDS: "3.0"
       SLOT_CODE_FORMAT: "{parking_lot_id}-{slot_id}"
-
-    ports:
-      - "${AI_HOST_PORT:-8000}:8000"
 
     volumes:
       - ./Parking_Ai/model:/app/model:ro
@@ -252,7 +232,7 @@ services:
   # 前端 Nginx
   # =========================
   ruoyi-ui:
-    image: ${DOCKER_REGISTRY:-}/smart-parking-ui:latest
+    image: ${UI_IMAGE:-smart-parking-ui:latest}
     container_name: smart-parking-ui
     restart: always
     cpus: 1
@@ -301,16 +281,10 @@ services:
     cpus: 1
     mem_limit: 1024m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       PROMETHEUS_RETENTION_TIME: ${PROMETHEUS_RETENTION_TIME:-15d}
       PROMETHEUS_STORAGE_TSDB_PATH: /prometheus
-
-    ports:
-      - "${PROMETHEUS_HOST_PORT:-9090}:9090"
 
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -318,7 +292,6 @@ services:
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-15d}'
       - '--storage.tsdb.retention.size=${PROMETHEUS_STORAGE_SIZE:-512MB}'
       - '--web.enable-lifecycle'
-      - '--web.enable-admin-api'
       - '--log.level=info'
 
     volumes:
@@ -358,9 +331,6 @@ services:
     cpus: 1
     mem_limit: 512m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
@@ -372,10 +342,6 @@ services:
       GF_ALERTING_ENABLED: "true"
       GF_ALERTING_ERROR_ORPHANED_CLEANUP_ENABLED: "true"
       GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
-
-    ports:
-      - "${GRAFANA_HOST_PORT:-3000}:3000"
-
     volumes:
       - ./monitoring/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./monitoring/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro

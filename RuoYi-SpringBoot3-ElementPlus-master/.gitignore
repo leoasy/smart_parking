@@ -20,6 +20,5 @@ selenium-debug.log
 *.local
 !.env.local
 
-package-lock.json
 yarn.lock
 pnpm-lock.yaml

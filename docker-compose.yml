@@ -28,9 +28,6 @@ services:
     mem_limit: 1536m
     shm_size: 256m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -84,11 +81,9 @@ services:
     cpus: 0.75
     mem_limit: 512m
 
-    env_file:
-      - .env
-
     environment:
       TZ: ${TZ:-Asia/Shanghai}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
     ports:
       - "${REDIS_HOST_PORT:-6379}:6379"
@@ -133,9 +128,6 @@ services:
     cpus: 2
     mem_limit: 1536m
     shm_size: 128m
-
-    env_file:
-      - .env
 
     environment:
       TZ: ${TZ:-Asia/Shanghai}

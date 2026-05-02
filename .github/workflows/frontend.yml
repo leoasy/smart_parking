@@ -59,6 +59,10 @@ jobs:
     needs: frontend-ci
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+    env:
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
 
     steps:
       - name: Checkout code
@@ -67,23 +71,44 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Check Docker publish secrets
+        id: publish
+        shell: bash
+        run: |
+          if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ] && [ -n "$DOCKER_REGISTRY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Login to Docker Hub
+        if: steps.publish.outputs.enabled == 'true'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ env.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        if: steps.publish.outputs.enabled != 'true'
+        run: |
+          docker build \
+            -t smart-parking-ui:ci \
+            -f ./RuoYi-SpringBoot3-ElementPlus-master/Dockerfile.nginx \
+            ./RuoYi-SpringBoot3-ElementPlus-master
 
       - name: Extract metadata
+        if: steps.publish.outputs.enabled == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKER_REGISTRY }}/smart-parking-ui
+          images: ${{ env.DOCKER_REGISTRY }}/smart-parking-ui
           tags: |
             type=ref,event=branch
             type=sha,prefix={{branch}}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
+        if: steps.publish.outputs.enabled == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./RuoYi-SpringBoot3-ElementPlus-master
@@ -100,20 +125,33 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
     environment: production
+    env:
+      SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
+      SERVER_USER: ${{ secrets.SERVER_USER }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check deploy secrets
+        id: deploy
+        shell: bash
+        run: |
+          if [ -n "$SERVER_SSH_KEY" ] && [ -n "$SERVER_HOST" ] && [ -n "$SERVER_USER" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup SSH key
+        if: steps.deploy.outputs.enabled == 'true'
         uses: webfactory/ssh-agent@v0.9.0
         with:
-          ssh-private-key: ${{ secrets.SERVER_SSH_KEY }}
+          ssh-private-key: ${{ env.SERVER_SSH_KEY }}
 
       - name: Deploy to server
-        env:
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
+        if: steps.deploy.outputs.enabled == 'true'
         run: |
           ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
             cd /opt/smart-parking
@@ -123,6 +161,11 @@ jobs:
           EOF
 
       - name: Smoke test
+        if: steps.deploy.outputs.enabled == 'true'
         run: |
           curl -sf http://${{ secrets.SERVER_HOST }}:${{ secrets.UI_PORT || 80 }}/health || exit 1
           echo "Frontend deployment verified"
+
+      - name: Skip deployment
+        if: steps.deploy.outputs.enabled != 'true'
+        run: echo "Deployment secrets are not configured; skipping deployment."
