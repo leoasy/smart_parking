@@ -109,6 +109,18 @@ public class RedisCache
     }
 
     /**
+     * 递增缓存数值
+     *
+     * @param key 缓存键值
+     * @param delta 递增步长
+     * @return 递增后的值
+     */
+    public Long increment(final String key, final long delta)
+    {
+        return redisTemplate.opsForValue().increment(key, delta);
+    }
+
+    /**
      * 删除单个对象
      *
      * @param key

@@ -1,7 +1,6 @@
 package com.ruoyi.common.filter;
 
 import java.io.IOException;
-import java.util.UUID;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -9,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import com.ruoyi.common.utils.uuid.IdUtils;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
@@ -43,11 +43,11 @@ public class TraceFilter implements Filter {
         // 获取或生成 traceId
         String traceId = httpRequest.getHeader(TRACE_ID_HEADER);
         if (traceId == null || traceId.isEmpty()) {
-            traceId = UUID.randomUUID().toString(true);
+            traceId = IdUtils.fastSimpleUUID();
         }
 
         // 生成 spanId（取 UUID 缩短前8位）
-        String spanId = UUID.randomUUID().toString(true).substring(0, 8);
+        String spanId = IdUtils.fastSimpleUUID().substring(0, 8);
 
         try {
             // 放入 MDC，供 logback JSON 格式读取

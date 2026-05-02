@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -54,12 +55,12 @@ public class AlarmServiceImpl extends ServiceImpl<AlarmMapper,Alarm> implements 
         StringBuilder successMsg = new StringBuilder();
         StringBuilder failureMsg = new StringBuilder();
         // 批量查询所有 event_id，一次DB查询替代 N 次
-        List<String> eventIds = list.stream()
+        List<Long> eventIds = list.stream()
                 .map(Alarm::getEventId)
-                .filter(StringUtils::isNotBlank)
+                .filter(Objects::nonNull)
                 .distinct()
                 .toList();
-        Set<String> existingEventIds = eventIds.isEmpty() ? Set.of() :
+        Set<Long> existingEventIds = eventIds.isEmpty() ? Set.of() :
                 alarmMapper.selectList(new QueryWrapper<Alarm>()
                         .in("event_id", eventIds)
                         .eq("del_flag", "0"))

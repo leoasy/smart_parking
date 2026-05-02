@@ -91,7 +91,7 @@ public class ParkingDetectService {
     }
 
     @CircuitBreaker(name = "aiService", fallbackMethod = "invokeFastApiFallback")
-    @Retry(name = "aiService", maxAttempts = 3)
+    @Retry(name = "aiService")
     private Map<String, Object> invokeFastApi(String parkingLotId, Integer cameraId, File imageFile) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);

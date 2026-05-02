@@ -1,6 +1,6 @@
 package com.ruoyi.biz.kafka;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.ruoyi.biz.domain.AiEvent;
 import com.ruoyi.biz.service.impl.AiAlarmOrchestrator;
 import org.junit.jupiter.api.BeforeEach;

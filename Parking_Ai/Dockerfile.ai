@@ -3,7 +3,7 @@
 # Ultralytics YOLO + FastAPI + PyTorch
 # =========================================
 
-# Build with: docker build --dangerously-skip-permissions -t parking-ai -f Dockerfile.ai .
+# Build with: docker build -t parking-ai -f Dockerfile.ai .
 
 # 使用 Python 3.11 基础镜像
 FROM python:3.11-slim

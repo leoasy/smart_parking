@@ -1,4 +1,5 @@
 from core.engine import ParkingEngine
+import numpy as np
 from core.config import (
     Config,
     ModelConfig,
@@ -41,7 +42,8 @@ def test_engine_get_current_status(monkeypatch) -> None:
                                 (),
                                 {"slot_id": 1, "slot_code": "roi_1-1", "polygon": [(0, 0), (1, 0), (1, 1)]},
                             )()
-                        ]
+                        ],
+                        "image_size": [1, 1],
                     },
                 )()
             }
@@ -50,7 +52,7 @@ def test_engine_get_current_status(monkeypatch) -> None:
 
     engine = ParkingEngine(_build_cfg())
     engine.detector = _DummyDetector()
-    engine.process_image(image=[[0]], parking_lot_id="roi_1", camera_id=1, visualize=False)
+    engine.process_image(image=np.zeros((1, 1, 3), dtype=np.uint8), parking_lot_id="roi_1", camera_id=1, visualize=False)
     status = engine.get_current_status()
 
     assert "snapshots" in status

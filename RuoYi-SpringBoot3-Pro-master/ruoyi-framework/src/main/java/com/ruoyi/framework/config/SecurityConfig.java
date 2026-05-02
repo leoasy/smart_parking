@@ -24,7 +24,7 @@ import com.ruoyi.framework.filter.XssFilter;
 import com.ruoyi.framework.security.filter.JwtAuthenticationTokenFilter;
 import com.ruoyi.framework.security.handle.AuthenticationEntryPointImpl;
 import com.ruoyi.framework.security.handle.LogoutSuccessHandlerImpl;
-import com.ruoyi.framework.web.service.SysPasswordService;
+import com.ruoyi.framework.web.service.UserDetailsServiceImpl;
 
 /**
  * spring security配置
@@ -78,10 +78,10 @@ public class SecurityConfig
     private PermitAllUrlProperties permitAllUrl;
 
     /**
-     * 密码服务
+     * 用户认证服务
      */
     @Autowired
-    private SysPasswordService sysPasswordService;
+    private UserDetailsServiceImpl userDetailsService;
 
     /**
      * 是否启用密码重试限制
@@ -104,7 +104,7 @@ public class SecurityConfig
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(sysPasswordService);
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

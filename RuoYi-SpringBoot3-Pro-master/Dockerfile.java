@@ -18,11 +18,11 @@ COPY ruoyi-generator/pom.xml ./ruoyi-generator/pom.xml
 COPY ruoyi-quartz/pom.xml ./ruoyi-quartz/pom.xml
 COPY ruoyi-system/pom.xml ./ruoyi-system/pom.xml
 
-RUN mvn dependency:go-offline -B --dangerously-skip-permissions
+RUN mvn dependency:go-offline -B
 
 # ② 拷贝源码并打包
 COPY . .
-RUN mvn clean package -DskipTests -B --dangerously-skip-permissions
+RUN mvn clean package -DskipTests -B
 
 # ---- 运行阶段 ----
 FROM eclipse-temurin:17-jre

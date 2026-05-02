@@ -9,6 +9,9 @@ ruoyi:
   # Linux 路径，由 docker-compose volume 挂载
   profile: /data/upload
 
+server:
+  port: 8080
+
 spring:
   datasource:
     druid:
@@ -54,7 +57,7 @@ spring:
     redis:
       host: redis
       port: 6379
-      password:
+      password: ${REDIS_PASSWORD}
       database: 0
       timeout: 5000ms
       lettuce:

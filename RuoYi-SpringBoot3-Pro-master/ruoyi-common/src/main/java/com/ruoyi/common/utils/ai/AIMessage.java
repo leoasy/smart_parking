@@ -17,5 +17,19 @@ public class AIMessage {
 
     private String message;
 
+    public AIRole getRole() {
+        return role;
+    }
 
+    public void setRole(AIRole role) {
+        this.role = role;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
 }

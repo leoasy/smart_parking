@@ -10,7 +10,7 @@ class ParkingDetectServiceTest {
     @Test
     void detectAndPersist_shouldValidateImagePath() {
         ParkingDetectService service = new ParkingDetectService(
-                null, null, null, null
+                null, null, null, null, null
         );
         assertThrows(ServiceException.class, () -> service.detectAndPersist("roi_1", 1, "not-exists.jpg"));
     }

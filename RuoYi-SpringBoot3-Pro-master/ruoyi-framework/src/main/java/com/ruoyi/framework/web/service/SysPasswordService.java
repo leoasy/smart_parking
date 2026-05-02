@@ -1,6 +1,8 @@
 package com.ruoyi.framework.web.service;
 
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,8 @@ import com.ruoyi.framework.security.context.AuthenticationContextHolder;
 @Component
 public class SysPasswordService
 {
+    private static final Logger log = LoggerFactory.getLogger(SysPasswordService.class);
+
     @Autowired
     private RedisCache redisCache;
 
@@ -84,7 +88,7 @@ public class SysPasswordService
             {
                 // 获取锁定剩余时间
                 Long expireTime = redisCache.getExpire(getCacheKey(username));
-                long remainingMinutes = expireTime != null ? expireTime / 60 : lockTime;
+                int remainingMinutes = expireTime != null ? (int) Math.min(Integer.MAX_VALUE, expireTime / 60) : lockTime;
                 throw new UserPasswordRetryLimitExceedException(maxRetryCount, remainingMinutes);
             }
 

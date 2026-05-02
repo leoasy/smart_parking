@@ -57,7 +57,7 @@ services:
       - ./smart_parking.sql:/docker-entrypoint-initdb.d/01-smart_parking.sql:ro
 
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -psilent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 8
@@ -94,15 +94,16 @@ services:
       - "${REDIS_HOST_PORT:-6379}:6379"
 
     command:
-      - redis-server
-      - /usr/local/etc/redis/redis.conf
+      - sh
+      - -c
+      - redis-server /usr/local/etc/redis/redis.conf --requirepass "$${REDIS_PASSWORD}"
 
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
       - redis_data:/data
 
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping"]
+      test: ["CMD-SHELL", "redis-cli -a $${REDIS_PASSWORD} ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -141,6 +142,7 @@ services:
 
       # Spring Profile
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-devmy,docker}
+      SERVER_PORT: 8080
 
       # 如果你的项目是普通 datasource，可以直接读取这些环境变量
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-smart_parking}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
@@ -152,6 +154,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
       SPRING_DATA_REDIS_DATABASE: ${REDIS_DATABASE:-0}
+      AI_FASTAPI_URL: http://parking-ai:8000
 
       # Druid 控制台
       DRUID_LOGIN_USERNAME: ${DRUID_LOGIN_USERNAME}
