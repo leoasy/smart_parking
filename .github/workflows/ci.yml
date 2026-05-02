@@ -9,6 +9,8 @@ jobs:
   # ===== Python AI =====
   python-ai-tests:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/Parking_Ai
     defaults:
       run:
         working-directory: Parking_Ai
