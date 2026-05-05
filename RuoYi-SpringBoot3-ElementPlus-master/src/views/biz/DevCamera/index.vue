@@ -119,7 +119,7 @@
       </el-table-column>
       <el-table-column label="最后心跳时间" align="center" prop="lastHeartbeat" width="180">
         <template #default="scope">
-          <span>{{ parseTime(scope.row.lastHeartbeat, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <span>{{ parseTime(scope.row.lastHeartbeat, '{y}-{m}-{d} {h}:{i}:{s}') || '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="安装位置" align="center" prop="location" />

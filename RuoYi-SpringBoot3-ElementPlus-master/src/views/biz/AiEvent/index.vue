@@ -99,15 +99,19 @@
       <el-table-column label="车位编号" align="center" prop="slotCode" />
       <el-table-column label="变更前状态" align="center" prop="oldStatus">
         <template #default="scope">
-          <dict-tag :options="ai_event_type" :value="scope.row.oldStatus"/>
+          <dict-tag :options="slot_status" :value="scope.row.oldStatus"/>
         </template>
       </el-table-column>
       <el-table-column label="变更后状态" align="center" prop="newStatus">
         <template #default="scope">
-          <dict-tag :options="ai_event_type" :value="scope.row.newStatus"/>
+          <dict-tag :options="slot_status" :value="scope.row.newStatus"/>
         </template>
       </el-table-column>
-      <el-table-column label="置信度" align="center" prop="confidence" />
+      <el-table-column label="置信度" align="center" prop="confidence">
+        <template #default="scope">
+          <span>{{ scope.row.confidence ?? '-' }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="事件发生时间" align="center" prop="eventTime" width="180">
         <template #default="scope">
           <span>{{ parseTime(scope.row.eventTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -161,7 +165,7 @@ onMounted(() => {
 });
 
 const { proxy } = getCurrentInstance();
-const { sys_common_status, ai_event_type } = proxy.useDict('sys_common_status', 'ai_event_type');
+const { sys_common_status, slot_status } = proxy.useDict('sys_common_status', 'slot_status');
 
 const importRes = ref(null);
 watch(
