@@ -120,20 +120,20 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter
             return true;
         }
         String usageKey = TOKEN_USAGE_PREFIX + token;
-        Long usageCount = redisCache.getCacheObject(usageKey);
+        Number usageCount = redisCache.getCacheObject(usageKey);
         
         if (usageCount == null) {
             // 首次使用，初始化计数器
-            redisCache.setCacheObject(usageKey, 1, 30, TimeUnit.DAYS);
+            redisCache.setCacheObject(usageKey, 1L, 30, TimeUnit.DAYS);
             return true;
         }
         
-        if (usageCount >= maxTokenUsage) {
+        if (usageCount.longValue() >= maxTokenUsage) {
             return false;
         }
         
         // 增加使用计数
-        redisCache.increment(usageKey, 1);
+        redisCache.setCacheObject(usageKey, usageCount.longValue() + 1L, 30, TimeUnit.DAYS);
         return true;
     }
 

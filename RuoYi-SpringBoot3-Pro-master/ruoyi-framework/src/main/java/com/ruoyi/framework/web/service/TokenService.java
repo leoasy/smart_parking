@@ -218,11 +218,11 @@ public class TokenService {
             return false;
         }
         String key = TOKEN_REFRESH_COUNT_PREFIX + token;
-        Long count = redisCache.getCacheObject(key);
+        Number count = redisCache.getCacheObject(key);
         if (count == null) {
             return true;
         }
-        return count < maxRefreshCount;
+        return count.longValue() < maxRefreshCount;
     }
 
     /**
@@ -230,11 +230,11 @@ public class TokenService {
      */
     private void incrementRefreshCount(String token) {
         String key = TOKEN_REFRESH_COUNT_PREFIX + token;
-        Long count = redisCache.getCacheObject(key);
+        Number count = redisCache.getCacheObject(key);
         if (count == null) {
-            redisCache.setCacheObject(key, 1, 24, TimeUnit.HOURS);
+            redisCache.setCacheObject(key, 1L, 24, TimeUnit.HOURS);
         } else {
-            redisCache.increment(key, 1);
+            redisCache.setCacheObject(key, count.longValue() + 1L, 24, TimeUnit.HOURS);
         }
     }
 
