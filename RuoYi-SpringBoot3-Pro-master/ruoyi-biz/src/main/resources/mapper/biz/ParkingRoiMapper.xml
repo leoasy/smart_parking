@@ -45,5 +45,52 @@
                 WHERE r.del_flag = '0'
         </select>
 
-</mapper>
+    <select id="selectPageWithRelation" resultMap="ParkingRoiResult">
+        SELECT
+            r.parking_roi_id,
+            r.slot_id,
+            r.image_width,
+            r.image_height,
+            r.roi_polygon,
+            r.del_flag,
+            r.create_by,
+            r.create_time,
+            r.update_by,
+            r.update_time,
+            r.remark,
+            COALESCE(s.slot_code, r.slot_code) AS slot_code,
+            s.camera_id,
+            COALESCE(c.camera_name, r.camera_name) AS camera_name
+        FROM biz_parking_roi r
+        LEFT JOIN biz_parking_slot s
+            ON r.slot_id = s.parking_slot_id
+            AND s.del_flag = '0'
+        LEFT JOIN dev_camera c
+            ON s.camera_id = c.camera_id
+            AND c.del_flag = '0'
+        WHERE r.del_flag = '0'
+        <if test="roi.slotId != null">
+            AND r.slot_id = #{roi.slotId}
+        </if>
+        <if test="roi.slotCode != null and roi.slotCode != ''">
+            AND COALESCE(s.slot_code, r.slot_code) LIKE CONCAT('%', #{roi.slotCode}, '%')
+        </if>
+        <if test="roi.cameraName != null and roi.cameraName != ''">
+            AND COALESCE(c.camera_name, r.camera_name) LIKE CONCAT('%', #{roi.cameraName}, '%')
+        </if>
+        <if test="roi.imageWidth != null">
+            AND r.image_width = #{roi.imageWidth}
+        </if>
+        <if test="roi.imageHeight != null">
+            AND r.image_height = #{roi.imageHeight}
+        </if>
+        <if test="roi.params != null and roi.params['begincreate_time'] != null and roi.params['begincreate_time'] != ''">
+            AND r.create_time &gt;= CONCAT(#{roi.params['begincreate_time']}, ' 00:00:00')
+        </if>
+        <if test="roi.params != null and roi.params['endcreate_time'] != null and roi.params['endcreate_time'] != ''">
+            AND r.create_time &lt;= CONCAT(#{roi.params['endcreate_time']}, ' 23:59:59')
+        </if>
+        ORDER BY r.parking_roi_id ASC
+    </select>
 
+</mapper>

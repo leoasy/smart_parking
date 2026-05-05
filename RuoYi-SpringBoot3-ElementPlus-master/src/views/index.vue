@@ -93,6 +93,7 @@ async function loadDashboard() {
   stats.value[0].value = data.totalSlots
   stats.value[1].value = data.occupiedSlots
   stats.value[2].value = data.freeSlots
+  stats.value[3].title = data.usingLatestDataDate && data.statDate ? `${data.statDate} 告警` : "今日告警"
   stats.value[3].value = data.todayAlarms
 
   events.value = data.events
@@ -125,7 +126,7 @@ function initSlotChart(data) {
 function initAlarmChart(data) {
   const chart = echarts.init(alarmChart.value)
   chart.setOption({
-    title: { text: "告警趋势（7天）" },
+    title: { text: data.usingLatestDataDate ? "告警趋势（按最新数据）" : "告警趋势（7天）" },
     xAxis: { type: "category", data: data.days },
     yAxis: { type: "value" },
     series: [

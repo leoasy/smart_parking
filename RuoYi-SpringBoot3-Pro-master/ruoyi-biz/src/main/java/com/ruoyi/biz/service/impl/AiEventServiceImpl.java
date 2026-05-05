@@ -11,6 +11,7 @@ import com.ruoyi.biz.service.IAlarmService;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -196,15 +197,16 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
     public Map<String, Object> dashboard() {
         Map<String, Object> map = new HashMap<>();
 
-        long totalSlots = parkingSlotMapper.selectCount(null);
+        long totalSlots = parkingSlotMapper.selectCount(new QueryWrapper<ParkingSlot>().eq("del_flag", "0"));
         long occupiedSlots = parkingSlotMapper.selectCount(
-                new QueryWrapper<ParkingSlot>().eq("slot_status", "OCCUPIED")
+                new QueryWrapper<ParkingSlot>().eq("slot_status", "OCCUPIED").eq("del_flag", "0")
         );
         long freeSlots = totalSlots - occupiedSlots;
 
-        long todayAlarms = alarmMapper.selectCount(
-                new QueryWrapper<Alarm>().ge("trigger_time", LocalDate.now())
-        );
+        LocalDate today = LocalDate.now();
+        LocalDate statDate = resolveDashboardStatDate(today);
+        boolean usingLatestDataDate = !today.equals(statDate);
+        long todayAlarms = countAlarmsByDate(statDate);
 
         long cameraOnline = devCameraMapper.selectCount(
                 new QueryWrapper<DevCamera>().eq("camera_status", "ONLINE")
@@ -214,12 +216,14 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
         );
 
         List<AiEvent> events = aiEventMapper.selectList(
-                new QueryWrapper<AiEvent>().orderByDesc("event_time").last("limit 10")
+                new QueryWrapper<AiEvent>().eq("del_flag", "0").orderByDesc("event_time").last("limit 10")
         );
         map.put("totalSlots", totalSlots);
         map.put("occupiedSlots", occupiedSlots);
         map.put("freeSlots", freeSlots);
         map.put("todayAlarms", todayAlarms);
+        map.put("statDate", statDate.toString());
+        map.put("usingLatestDataDate", usingLatestDataDate);
 
         map.put("cameraOnline", cameraOnline);
         map.put("cameraOffline", cameraOffline);
@@ -227,22 +231,12 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
         // 最近7天告警数据统计
         List<String> days = new ArrayList<>();
         List<Long> alarmCounts = new ArrayList<>();
-        LocalDate today = LocalDate.now();
-        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEE");
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("MM-dd");
 
         for (int i = 6; i >= 0; i--) {
-            LocalDate date = today.minusDays(i);
+            LocalDate date = statDate.minusDays(i);
             days.add(date.format(dayFormatter));
-
-            // 统计每日告警数量
-            LocalDate nextDay = date.plusDays(1);
-            Long count = aiEventMapper.selectCount(
-                    new QueryWrapper<AiEvent>()
-                            .ge("event_time", date.atStartOfDay())
-                            .lt("event_time", nextDay.atStartOfDay())
-                            .eq("del_flag", "0")
-            );
-            alarmCounts.add(count);
+            alarmCounts.add(countAlarmsByDate(date));
         }
 
         map.put("days", days);
@@ -251,5 +245,33 @@ public class AiEventServiceImpl extends ServiceImpl<AiEventMapper,AiEvent> imple
         map.put("events", events);
 
         return map;
+    }
+
+    private LocalDate resolveDashboardStatDate(LocalDate today) {
+        if (countAlarmsByDate(today) > 0) {
+            return today;
+        }
+        Alarm latestAlarm = alarmMapper.selectOne(
+                new QueryWrapper<Alarm>()
+                        .eq("del_flag", "0")
+                        .isNotNull("trigger_time")
+                        .orderByDesc("trigger_time")
+                        .last("limit 1")
+        );
+        if (latestAlarm == null || latestAlarm.getTriggerTime() == null) {
+            return today;
+        }
+        return latestAlarm.getTriggerTime().toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    private Long countAlarmsByDate(LocalDate date) {
+        return alarmMapper.selectCount(
+                new QueryWrapper<Alarm>()
+                        .ge("trigger_time", date.atStartOfDay())
+                        .lt("trigger_time", date.plusDays(1).atStartOfDay())
+                        .eq("del_flag", "0")
+        );
     }
 }

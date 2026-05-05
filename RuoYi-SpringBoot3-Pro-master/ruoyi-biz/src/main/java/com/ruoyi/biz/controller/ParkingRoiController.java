@@ -48,8 +48,7 @@ public class ParkingRoiController extends BaseController {
 @PreAuthorize("@ss.hasPermi('biz:ParkingRoi:list')")
 @GetMapping("/list")
     public TableDataInfo list(ParkingRoi parkingRoi) {
-        QueryWrapper<ParkingRoi> queryWrapper = getQueryWrapper(ParkingRoi.class);
-        IPage<ParkingRoi> page = parkingRoiService.pageParkingRoi(getPage(), queryWrapper);
+        IPage<ParkingRoi> page = parkingRoiService.pageParkingRoiWithRelation(getPage(), parkingRoi);
         return getDataTableByPage(page);
     }
 

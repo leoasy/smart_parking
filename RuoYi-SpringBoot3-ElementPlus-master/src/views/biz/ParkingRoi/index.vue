@@ -101,7 +101,7 @@
 
     <el-table v-loading="ParkingRoiLoading" :data="ParkingRoiList" @selection-change="ParkingRoiHandleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="车位编号" align="center" prop="slotCode" />Id" />
+      <el-table-column label="车位编号" align="center" prop="slotCode" />
       <el-table-column label="摄像头名称" align="center" prop="cameraName" />
       <el-table-column label="图片宽度" align="center" prop="imageWidth" />
       <el-table-column label="图片高度" align="center" prop="imageHeight" />
