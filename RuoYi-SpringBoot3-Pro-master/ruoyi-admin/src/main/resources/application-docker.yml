@@ -13,19 +13,21 @@ server:
   port: 8080
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     druid:
       master:
         # 通过 Docker 服务名访问 MySQL，不启用 SSL
         url: jdbc:mysql://mysql:3306/smart_parking?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
-        username: root
-        password: ${MYSQL_ROOT_PASSWORD}
+        username: ${MYSQL_USER}
+        password: ${MYSQL_PASSWORD}
         # 连接池核心参数
         initial-size: 5
         min-idle: 5
         max-active: 20
         # 连接获取等待时间
-        max-wait: 60000ms
+        max-wait: 60000
         # 连接泄漏检测（秒）
         remove-abandoned: true
         remove-abandoned-timeout: 180
@@ -67,6 +69,9 @@ spring:
           min-idle: 5
           max-wait: 1000ms
         shutdown-timeout: 100ms
+
+xss:
+  enabled: false
 
 # Resilience4j 熔断配置
 resilience4j:

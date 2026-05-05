@@ -10,7 +10,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import com.ruoyi.common.utils.uuid.IdUtils;
 import org.slf4j.MDC;
-import org.springframework.stereotype.Component;
 
 /**
  * TraceFilter - 请求链路追踪过滤器
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
  *
  * @author ruoyi
  */
-@Component
 public class TraceFilter implements Filter {
 
     /** traceId 对应的 MDC key */

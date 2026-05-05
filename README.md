@@ -6,10 +6,10 @@ Smart Parking 是一个面向社区停车场的车位占用检测系统。项目
 
 | 服务 | 技术栈 | 默认地址 | 说明 |
 | --- | --- | --- | --- |
-| 前端 | Vue3 + Element Plus + Vite + Nginx | http://localhost/admin/ | 通过 `/prod-api/` 同源代理后端 |
+| 前端 | Vue3 + Element Plus + Vite + Nginx | http://localhost:8088/admin/ | 通过 `/prod-api/` 同源代理后端，端口由 `UI_HOST_PORT` 控制 |
 | 后端 | RuoYi Spring Boot 3 + MySQL + Redis + Kafka | http://localhost:8087 | 容器内监听 8080，宿主机映射 8087 |
 | AI 推理 | Python FastAPI + YOLO | http://localhost:8000 | 负责图片/视频检测并回调后端 |
-| MySQL | MySQL 8.4 | localhost:3306 | 业务库 `smart_parking` |
+| MySQL | MySQL 8.4 | localhost:3307 | 业务库 `smart_parking`，容器内仍为 `mysql:3306` |
 | Redis | Redis 7.4 | localhost:6379 | 会话、缓存、限流 |
 | AI 网关 | new-api | http://localhost:3000 | 可选 profile：`gateway` |
 
@@ -32,24 +32,67 @@ smart-parking/
 
 前提：Windows 本机安装 Docker Desktop，并确保 `.env` 已存在且包含 MySQL、Redis、Druid 等密码变量。模型文件 `Parking_Ai/model/parking.pt` 不提交到 Git，需要本地放置。
 
+首次配置：
+
 ```powershell
+cd D:\IDEA\smart-parking
+Copy-Item .env.example .env
+# 修改 .env 中的 MYSQL_ROOT_PASSWORD、MYSQL_PASSWORD、REDIS_PASSWORD、DRUID_LOGIN_PASSWORD 等密码
+```
+
+正常情况下可以一条命令启动全部服务：
+
+```powershell
+cd D:\IDEA\smart-parking
+
 docker compose up -d
+docker compose ps
+```
+
+首次启动、排障或需要观察依赖初始化时，推荐分阶段启动，便于定位数据库、缓存或后端健康检查问题：
+
+```powershell
+cd D:\IDEA\smart-parking
+
+docker compose config
+docker compose up -d mysql redis
+docker compose up -d ruoyi-server parking-ai ruoyi-ui
+docker compose ps
 ```
 
 健康检查：
 
 ```powershell
-curl http://localhost/health
+curl http://localhost:8088/health
 curl http://localhost:8087/actuator/health
 curl http://localhost:8000/health
 ```
 
+说明：
+
+- `docker compose ps` 应显示 `mysql`、`redis`、`ruoyi-server`、`parking-ai`、`ruoyi-ui` 都为 `healthy`。
+- `http://localhost:8087/actuator/health` 可能返回认证失败 JSON，说明 HTTP 已到达后端；Docker 内部 healthcheck 使用容器内地址判断服务健康。
+- Docker MySQL 默认映射到宿主机 `localhost:3307`，避免和 Windows 本机 MySQL 的 `3306` 冲突。容器内后端仍访问 `mysql:3306`，不受宿主机端口影响。
+- Docker 前端建议映射到宿主机 `localhost:8088`，避免 Windows 本机或其他容器占用 `80`。如果你把 `.env` 的 `UI_HOST_PORT` 改回 `80`，访问地址才是 `http://localhost/admin/`。
+
 访问入口：
 
 ```text
-前端：http://localhost/admin/
+前端：http://localhost:8088/admin/
 账号：admin / 12345678
 Druid：http://localhost:8087/druid/
+```
+
+可选 AI 网关：
+
+```powershell
+docker compose --profile gateway up -d
+```
+
+访问地址：
+
+```text
+AI 网关：http://localhost:3000
 ```
 
 停止服务：
@@ -59,7 +102,16 @@ docker compose down
 docker compose down -v  # 删除数据卷，谨慎使用
 ```
 
+`docker compose down -v` 会删除 MySQL、Redis、上传目录等数据卷。只有需要重新导入 `smart_parking.sql` 或清空本地数据时才使用。
+
 ## 本地开发
+
+推荐开发方式：基础服务、后端和 AI 仍由 Docker 管理，前端用 Vite 本机热更新。
+
+```powershell
+cd D:\IDEA\smart-parking
+docker compose up -d mysql redis ruoyi-server parking-ai
+```
 
 ### 后端
 
@@ -77,10 +129,23 @@ docker build -t smart-parking-backend -f Dockerfile.java .
 
 ### 前端
 
+本地开发推荐使用 production mode，因为当前 `vite.config.js` 代理的是 `/prod-api`，而 `.env.development` 使用 `/dev-api`。直接运行 `npm.cmd run dev` 可能导致接口代理不通。
+
 ```powershell
-cd RuoYi-SpringBoot3-ElementPlus-master
-npm.cmd install
-npm.cmd run dev
+cd D:\IDEA\smart-parking\RuoYi-SpringBoot3-ElementPlus-master
+npm.cmd ci
+npm.cmd run dev -- --mode production --port 5173
+```
+
+访问：
+
+```text
+http://localhost:5173/admin/
+```
+
+构建和检查：
+
+```powershell
 npm.cmd run build:prod
 npm.cmd run build:stage
 npm.cmd audit
@@ -88,10 +153,11 @@ npm.cmd audit
 
 说明：
 
-- 开发服务默认监听 80，`/prod-api` 代理到 `http://localhost:8087`。
+- Vite 默认配置监听 80；本地开发建议显式指定 `--port 5173`，避免占用系统 80 端口。
+- `/prod-api` 代理到 `http://localhost:8087`。
 - `build:prod` 只做 Vite 构建；FTP 部署已拆分到 `deploy:ftp`。
 - `vite-plugin-svg-icons` 已被本地 Vite 插件替代，避免旧 `svg-baker/svgo/postcss` 漏洞链。
-- `package-lock.json` 当前未跟踪，安全补丁通过 `package.json` 精确版本和 `overrides` 固定。
+- `package-lock.json` 已跟踪，CI 和本地开发统一使用 `npm ci`。
 
 ### AI 推理
 
@@ -154,6 +220,7 @@ mvn.cmd test
 mvn.cmd clean package -DskipTests
 
 cd ..\RuoYi-SpringBoot3-ElementPlus-master
+npm.cmd ci
 npm.cmd audit
 npm.cmd run build:prod
 npm.cmd run build:stage
@@ -161,6 +228,7 @@ npm.cmd run build:stage
 cd ..
 docker compose config
 docker compose -f docker-compose.prod.yml config
+docker compose build ruoyi-ui
 ```
 
 AI 测试：
