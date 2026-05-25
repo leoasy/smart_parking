@@ -1,4 +1,4 @@
-# Prometheus 配置 for Smart Parking
+# 社区车位占用检测系统 Prometheus 配置
 global:
   scrape_interval: 15s
   evaluation_interval: 15s

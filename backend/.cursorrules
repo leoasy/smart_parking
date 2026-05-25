@@ -1,0 +1,14 @@
+# RuoYi backend local rules
+
+- Use JDK 17 and Maven on Windows.
+- Run with local profile `demo`.
+- Local MySQL database: `smart_parking` on port `3306`.
+- Local Redis: port `6379`.
+- Do not use Docker.
+
+Commands:
+
+```powershell
+mvn.cmd -pl ruoyi-admin -am package -DskipTests
+java -jar .\ruoyi-admin\target\RuoyiSpringBoot3.jar
+```

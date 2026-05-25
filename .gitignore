@@ -1,43 +1,46 @@
 # ===== Java =====
-RuoYi-SpringBoot3-Pro-master/target/
-RuoYi-SpringBoot3-Pro-master/pom.xml.tag
-RuoYi-SpringBoot3-Pro-master/pom.xml.releaseBackup
-RuoYi-SpringBoot3-Pro-master/pom.xml.versionsBackup
-RuoYi-SpringBoot3-Pro-master/pom.xml.next
-RuoYi-SpringBoot3-Pro-master/release.properties
-RuoYi-SpringBoot3-Pro-master/dependency-reduced-pom.xml
-RuoYi-SpringBoot3-Pro-master/buildNumber.properties
-RuoYi-SpringBoot3-Pro-master/.mvn/timing.properties
-RuoYi-SpringBoot3-Pro-master/.mvn/wrapper/maven-wrapper.jar
+backend/target/
+backend/pom.xml.tag
+backend/pom.xml.releaseBackup
+backend/pom.xml.versionsBackup
+backend/pom.xml.next
+backend/release.properties
+backend/dependency-reduced-pom.xml
+backend/buildNumber.properties
+backend/.mvn/timing.properties
+backend/.mvn/wrapper/maven-wrapper.jar
 
 # ===== Python =====
 **/__pycache__/
-Parking_Ai/__pycache__/
-Parking_Ai/.pytest_cache/
-Parking_Ai/*.pyc
-Parking_Ai/*.pyo
-Parking_Ai/.ruff_cache/
-Parking_Ai/dist/
-Parking_Ai/build/
-Parking_Ai/*.egg-info/
+ai-service/__pycache__/
+ai-service/.pytest_cache/
+ai-service/*.pyc
+ai-service/*.pyo
+ai-service/.ruff_cache/
+ai-service/dist/
+ai-service/build/
+ai-service/*.egg-info/
+ai-service/data/outputs/*.jpg
+ai-service/data/outputs/*.png
+ai-service/data/outputs/*.jpeg
+ai-service/data/outputs/pytest-tmp/
 
-# ===== AI Model Files (禁止提交) =====
+# ===== AI Model Files (do not commit) =====
 **/*.pt
 **/*.pth
 **/*.onnx
 **/*.engine
-Parking_Ai/model/
+ai-service/model/
 
 # ===== Frontend =====
-RuoYi-SpringBoot3-ElementPlus-master/node_modules/
-RuoYi-SpringBoot3-ElementPlus-master/dist/
-RuoYi-SpringBoot3-ElementPlus-master/.DS_Store
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
 
-# ===== Docker & Env =====
+# ===== Env =====
 .env
 .env.local
 .env.*.local
-docker-compose.override.yml
 
 # ===== IDE =====
 .idea/
@@ -58,8 +61,19 @@ Thumbs.db
 # ===== Logs =====
 *.log
 logs/
-RuoYi-SpringBoot3-Pro-master/logs/
+backend/logs/
+
+# ===== Portable Redis runtime data =====
+Redis/*.rdb
+Redis/*.aof
+Redis/*.pid
+Redis/*.log
+Redis/appendonlydir/
+
+# ===== Generated submission packages =====
+release/
 
 # ===== Temp =====
 *.tmp
 *.temp
+.tmp/

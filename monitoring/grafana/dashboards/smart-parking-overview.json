@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Smart Parking System Overview - 智慧停车系统总览",
+  "description": "社区车位占用检测系统总览",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -1598,7 +1598,7 @@
     "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
   },
   "timezone": "browser",
-  "title": "智慧停车系统总览 / Smart Parking Overview",
+  "title": "社区车位占用检测系统总览",
   "uid": "smart-parking-overview",
   "version": 1,
   "weekStart": ""

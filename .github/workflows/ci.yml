@@ -10,26 +10,26 @@ jobs:
   python-ai-tests:
     runs-on: ubuntu-latest
     env:
-      PYTHONPATH: ${{ github.workspace }}/Parking_Ai
+      PYTHONPATH: ${{ github.workspace }}/ai-service
     defaults:
       run:
-        working-directory: Parking_Ai
+        working-directory: ai-service
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.9"
       - name: Install Python deps
         run: pip install -r requirements.txt
       - name: Run Python tests
         run: pytest -q
 
   # ===== Java Backend =====
-  ruoyi-biz-tests:
+  backend-tests:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: RuoYi-SpringBoot3-Pro-master
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -45,14 +45,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: RuoYi-SpringBoot3-ElementPlus-master
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: npm
-          cache-dependency-path: RuoYi-SpringBoot3-ElementPlus-master/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Build
@@ -61,34 +61,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: RuoYi-SpringBoot3-ElementPlus-master/dist/
+          path: frontend/dist/
           retention-days: 7
-
-  # ===== Docker Config & Frontend Image =====
-  docker-build:
-    needs: [python-ai-tests, ruoyi-biz-tests, frontend-build]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Create CI env file
-        run: |
-          cat > .env <<'EOF'
-          MYSQL_ROOT_PASSWORD=ci_root_password
-          MYSQL_USER=smart_parking
-          MYSQL_PASSWORD=ci_password
-          MYSQL_DATABASE=smart_parking
-          REDIS_PASSWORD=ci_redis_password
-          REDIS_DATABASE=0
-          SPRING_PROFILES_ACTIVE=devmy,docker
-          DRUID_LOGIN_USERNAME=ci
-          DRUID_LOGIN_PASSWORD=ci_druid_password
-          TZ=Asia/Shanghai
-          CORS_ALLOWED_ORIGINS=http://localhost:80
-          CORS_ALLOW_CREDENTIALS=false
-          EOF
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Validate compose config
-        run: docker compose config
-      - name: Build frontend image
-        run: docker compose build ruoyi-ui

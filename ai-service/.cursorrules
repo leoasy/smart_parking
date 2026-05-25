@@ -1,0 +1,8 @@
+# Parking AI local rules
+
+- Use conda env `python39`.
+- Install dependencies with `conda run -n python39 python -m pip install -r requirements.txt`.
+- Run tests with `conda run -n python39 python -m pytest -q`.
+- Start API with `conda run -n python39 python -m uvicorn main_api:app --host 0.0.0.0 --port 8000`.
+- Do not use Docker.
+- Do not commit model files such as `.pt`, `.pth`, `.onnx`, `.engine`.

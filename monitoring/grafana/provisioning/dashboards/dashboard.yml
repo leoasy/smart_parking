@@ -3,9 +3,9 @@
 apiVersion: 1
 
 providers:
-  - name: 'Smart Parking Dashboards'
+  - name: '社区车位占用检测系统大屏'
     orgId: 1
-    folder: 'Smart Parking'
+    folder: '社区车位占用检测系统'
     folderUid: 'smart-parking'
     type: file
     disableDeletion: false
